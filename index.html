@@ -747,7 +747,7 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-const DetailDrawer = ({ item, onClose, onTransition, onAddComment, onEdit, onDelete }) => {
+const DetailDrawer = ({ item, allItems, onSelectItem, onClose, onTransition, onAddComment, onEdit, onDelete }) => {
   const [comment, setComment] = useState('');
   const area = AREA_MAP[item.area];
   const next = TRANSITIONS[item.type][item.status] || [];
@@ -819,6 +819,26 @@ const DetailDrawer = ({ item, onClose, onTransition, onAddComment, onEdit, onDel
               <div className="text-sm text-stone-900 font-mono">{item.createdAt}</div>
             </Meta>
           </div>
+
+          {(item.relatedIds || []).length > 0 && (
+            <Section title={`연관 항목 (${item.relatedIds.length})`}>
+              <div className="space-y-1.5">
+                {item.relatedIds.map(rid => {
+                  const rel = allItems.find(i => i.id === rid);
+                  if (!rel) return <div key={rid} className="text-xs text-stone-400 font-mono">{rid} (삭제됨)</div>;
+                  return (
+                    <button key={rid} onClick={() => onSelectItem(rel)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-stone-50 hover:bg-stone-100 rounded-lg text-left transition">
+                      <TypeBadge type={rel.type} size="sm" />
+                      <span className="font-mono text-xs text-stone-500 flex-shrink-0">{rel.id}</span>
+                      <span className="text-xs text-stone-700 truncate flex-1">{rel.title}</span>
+                      <StatusBadge status={rel.status} />
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
 
           <Section title="설명">
             <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{item.description || '—'}</p>
@@ -892,7 +912,7 @@ const Field = ({ label, children }) => (
   </div>
 );
 
-const FormModal = ({ mode, initial, onClose, onSubmit }) => {
+const FormModal = ({ mode, initial, allItems, currentId, onClose, onSubmit }) => {
   const [form, setForm] = useState(initial || {
     type: 'Risk',
     title: '',
@@ -903,6 +923,7 @@ const FormModal = ({ mode, initial, onClose, onSubmit }) => {
     dueDate: dayStr(14),
     description: '',
     mitigation: '',
+    relatedIds: [],
   });
 
   const updateForm = (k, v) => {
@@ -994,6 +1015,30 @@ const FormModal = ({ mode, initial, onClose, onSubmit }) => {
               placeholder="어떻게 대응할 것인지"
               className={cx(inputCls, 'resize-none')} />
           </Field>
+
+          {allItems.filter(i => i.id !== currentId).length > 0 && (
+            <Field label="연관 항목">
+              <div className="max-h-36 overflow-y-auto border border-stone-200 rounded-md divide-y divide-stone-100">
+                {allItems.filter(i => i.id !== currentId).map(i => (
+                  <label key={i.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-stone-50 cursor-pointer">
+                    <input type="checkbox"
+                      checked={(form.relatedIds || []).includes(i.id)}
+                      onChange={(e) => {
+                        const next = e.target.checked
+                          ? [...(form.relatedIds || []), i.id]
+                          : (form.relatedIds || []).filter(id => id !== i.id);
+                        updateForm('relatedIds', next);
+                      }}
+                      className="rounded border-stone-300"
+                    />
+                    <TypeBadge type={i.type} size="sm" />
+                    <span className="font-mono text-xs text-stone-500 flex-shrink-0">{i.id}</span>
+                    <span className="text-xs text-stone-700 truncate">{i.title}</span>
+                  </label>
+                ))}
+              </div>
+            </Field>
+          )}
         </div>
 
         <div className="border-t border-stone-200 px-6 py-3 flex items-center justify-end gap-2 bg-stone-50 sticky bottom-0">
@@ -1110,17 +1155,20 @@ function RAIDApp() {
         )}
 
         {modalMode === 'create' && (
-          <FormModal mode="create" onClose={() => setModalMode(null)}
+          <FormModal mode="create" allItems={items ?? []} currentId={null}
+            onClose={() => setModalMode(null)}
             onSubmit={(data) => { createItem(data); setModalMode(null); }} />
         )}
         {modalMode === 'edit' && currentItem && (
-          <FormModal mode="edit" initial={currentItem}
+          <FormModal mode="edit" initial={currentItem} allItems={items ?? []} currentId={currentItem.id}
             onClose={() => { setModalMode(null); setSelectedItem(null); }}
             onSubmit={(data) => { updateItem(currentItem.id, data); setModalMode(null); setSelectedItem(null); }} />
         )}
         {modalMode === 'detail' && currentItem && (
           <DetailDrawer
             item={currentItem}
+            allItems={items ?? []}
+            onSelectItem={(i) => setSelectedItem(i)}
             onClose={() => { setModalMode(null); setSelectedItem(null); }}
             onTransition={transitionStatus}
             onAddComment={addComment}
