@@ -26,7 +26,7 @@
   <script type="text/babel" data-presets="react">
 const { useState, useMemo, useEffect, useRef } = React;
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZOGGszidxYhnuJyNBXK6wVudJouqdlt-Gj4-HAC1sHa3RmMQHr9LwdiXYoYJzNzaX/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyL2_Yizq-y3GSumA5aiLE5E2t2hZFU8-XW_aQeFxx9h0luiH-uhcVw1c7m_pKWYN546g/exec';
 
 /* ==========================================================================
    Icons (inline SVG, drop-in for lucide-react)
@@ -1035,13 +1035,13 @@ function RAIDApp() {
     setSyncState('saving');
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ items }),
-      })
-        .then(() => { setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); })
+      const url = SCRIPT_URL + '?action=save&data=' + encodeURIComponent(JSON.stringify(items));
+      fetch(url)
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) { setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); }
+          else { setSyncState('error'); }
+        })
         .catch(() => { setSyncState('error'); });
     }, 800);
   }, [items]);
