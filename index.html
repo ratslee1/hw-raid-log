@@ -62,10 +62,10 @@ const ArrowRight     = (p) => <Svg {...p}><path d="M5 12h14"/><path d="m12 5 7 7
    ========================================================================== */
 
 const TYPE_META = {
-  Risk:        { ko: '리스크',   desc: '향후 발생 가능성이 있으며 프로젝트에 영향을 줄 수 있는 잠재 위험',          icon: AlertTriangle, tone: 'rose',    statuses: ['Identified', 'Assessed', 'Mitigating', 'Closed'] },
-  Assumption:  { ko: '가정',     desc: '현재 기준으로 사실로 간주하고 진행하는 가정 (변경 시 영향 발생 가능)',       icon: HelpCircle,    tone: 'amber',   statuses: ['Pending', 'Validated', 'Invalidated'] },
-  Issue:       { ko: '이슈',     desc: '현재 발생하여 대응이 필요한 문제',                                          icon: Zap,           tone: 'violet',  statuses: ['Open', 'In Progress', 'Resolved', 'Closed'] },
-  Dependency:  { ko: '의존성',   desc: '외부 조직, 시스템, 또는 타 작업에 의존하는 항목',                           icon: Link2,         tone: 'emerald', statuses: ['Pending', 'Active', 'Blocked', 'Resolved'] },
+  Risk:        { ko: '리스크',   desc: '아직 안 터졌는데 걱정되는 것',       icon: AlertTriangle, tone: 'rose',    statuses: ['Identified', 'Assessed', 'Mitigating', 'Closed'] },
+  Assumption:  { ko: '가정',     desc: '확인 안됐는데 믿고 가는 것',         icon: HelpCircle,    tone: 'amber',   statuses: ['Pending', 'Validated', 'Invalidated'] },
+  Issue:       { ko: '이슈',     desc: '이미 영향 발생한 것',               icon: Zap,           tone: 'violet',  statuses: ['Open', 'In Progress', 'Resolved', 'Closed'] },
+  Dependency:  { ko: '의존성',   desc: '외부 없으면 못하는 것',             icon: Link2,         tone: 'emerald', statuses: ['Pending', 'Active', 'Blocked', 'Resolved'] },
 };
 
 const TYPE_TONE = {
