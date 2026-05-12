@@ -332,8 +332,10 @@ const Header = ({ view, setView, onCreate, onReset, syncState }) => (
    Dashboard view
    ========================================================================== */
 
-const Dashboard = ({ items, setView, setFilters }) => {
+const Dashboard = ({ items, setView, setFilters, onItemClick }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
+  const [showClosed, setShowClosed] = useState(false);
+  const closedItems = items.filter(i => TERMINAL.includes(i.status));
   const kpis = Object.keys(TYPE_META).map(t => {
     const ofType = items.filter(i => i.type === t);
     const open = ofType.filter(i => !TERMINAL.includes(i.status));
@@ -487,11 +489,27 @@ const Dashboard = ({ items, setView, setFilters }) => {
               <span className="text-sm font-sans font-normal text-stone-500 ml-1">open</span>
             </div>
             <button
-              onClick={() => { setFilters({ area: 'all', type: 'all', status: '__closed__', severity: 'all', search: '' }); setView('log'); }}
+              onClick={() => setShowClosed(v => !v)}
               className="text-xs text-stone-500 mt-1 hover:text-stone-900 hover:underline transition text-left"
             >
-              {items.filter(i => TERMINAL.includes(i.status)).length}건 종결됨 →
+              {closedItems.length}건 종결됨 {showClosed ? '▲' : '▼'}
             </button>
+            {showClosed && closedItems.length > 0 && (
+              <div className="mt-3 space-y-1.5">
+                {closedItems.map(i => (
+                  <button key={i.id} onClick={() => onItemClick(i)}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-stone-50 hover:bg-stone-100 rounded-md text-left transition">
+                    <TypeBadge type={i.type} size="sm" />
+                    <span className="font-mono text-[10px] text-stone-400 flex-shrink-0">{i.id}</span>
+                    <span className="text-xs text-stone-600 truncate">{i.title}</span>
+                    <StatusBadge status={i.status} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {showClosed && closedItems.length === 0 && (
+              <div className="mt-2 text-xs text-stone-400 italic">종결된 항목이 없습니다.</div>
+            )}
           </div>
         </div>
       </div>
@@ -1145,7 +1163,8 @@ function RAIDApp() {
       )}
       {!loading && (<>
         {view === 'dashboard' ? (
-          <Dashboard items={items} setView={setView} setFilters={setFilters} />
+          <Dashboard items={items} setView={setView} setFilters={setFilters}
+            onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }} />
         ) : (
           <RAIDLog
             items={filtered}
