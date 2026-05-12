@@ -486,9 +486,12 @@ const Dashboard = ({ items, setView, setFilters }) => {
               {items.filter(i => !TERMINAL.includes(i.status)).length}
               <span className="text-sm font-sans font-normal text-stone-500 ml-1">open</span>
             </div>
-            <div className="text-xs text-stone-600 mt-1">
-              {items.filter(i => TERMINAL.includes(i.status)).length}건 종결됨
-            </div>
+            <button
+              onClick={() => { setFilters({ area: 'all', type: 'all', status: '__closed__', severity: 'all', search: '' }); setView('log'); }}
+              className="text-xs text-stone-500 mt-1 hover:text-stone-900 hover:underline transition text-left"
+            >
+              {items.filter(i => TERMINAL.includes(i.status)).length}건 종결됨 →
+            </button>
           </div>
         </div>
       </div>
@@ -1104,7 +1107,8 @@ function RAIDApp() {
   const filtered = useMemo(() => (items ?? []).filter(i => {
     if (filters.area !== 'all' && i.area !== filters.area) return false;
     if (filters.type !== 'all' && i.type !== filters.type) return false;
-    if (filters.status !== 'all' && i.status !== filters.status) return false;
+    if (filters.status === '__closed__' && !TERMINAL.includes(i.status)) return false;
+    if (filters.status !== 'all' && filters.status !== '__closed__' && i.status !== filters.status) return false;
     if (filters.severity !== 'all' && i.severity !== filters.severity) return false;
     if (filters.search && !i.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
     return true;
