@@ -519,7 +519,6 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                         <div className="flex items-center gap-1.5 group/area">
                           <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
                             <div className="font-medium text-stone-900 text-sm truncate">{area.name}</div>
-                            <div className="text-[11px] text-stone-500 font-mono truncate">{area.id}</div>
                             {(area.tags || []).length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {(area.tags || []).map(tag => (
