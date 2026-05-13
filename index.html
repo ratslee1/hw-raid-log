@@ -107,7 +107,7 @@ const SEVERITY_STYLES = {
 const SEVERITY_WEIGHT = { Critical: 4, High: 3, Medium: 2, Low: 1 };
 const SEVERITIES = ['Critical', 'High', 'Medium', 'Low'];
 
-const AREAS = [
+const DEFAULT_AREAS = [
   { id: 'API',          name: '(툴)API 연동' },
   { id: 'ui_info',      name: 'UI 정보 (ui_info)' },
   { id: 'product_info', name: '상품 기준정보' },
@@ -116,8 +116,6 @@ const AREAS = [
   { id: 'eval_set',     name: '평가셋 작성' },
   { id: 'gpt_ptu',      name: '내부망 GPT PTU' },
 ];
-
-const AREA_MAP = Object.fromEntries(AREAS.map(a => [a.id, a]));
 
 /* ==========================================================================
    Dummy data
@@ -279,7 +277,15 @@ const dueChip = (due) => {
    Header
    ========================================================================== */
 
-const Header = ({ view, setView, onCreate, onReset, syncState }) => (
+const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  return (
   <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-stone-200">
     <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-8">
@@ -319,36 +325,51 @@ const Header = ({ view, setView, onCreate, onReset, syncState }) => (
         >
           초기화
         </button>
-        <button
-          onClick={onCreate}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-md transition"
-        >
-          <Plus className="w-3.5 h-3.5" /> 신규 항목
-        </button>
+        <div ref={menuRef} className="relative">
+          <button
+            onClick={() => setShowMenu(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-md transition"
+          >
+            <Plus className="w-3.5 h-3.5" /> 신규 항목
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg overflow-hidden z-30 min-w-[100px]">
+              <button onClick={() => { onCreateItem(); setShowMenu(false); }}
+                className="w-full text-left px-4 py-2.5 text-xs text-stone-700 hover:bg-stone-50 flex items-center gap-2">
+                <List className="w-3.5 h-3.5 text-stone-400" /> 아이템
+              </button>
+              <button onClick={() => { onCreateArea(); setShowMenu(false); }}
+                className="w-full text-left px-4 py-2.5 text-xs text-stone-700 hover:bg-stone-50 flex items-center gap-2 border-t border-stone-100">
+                <LayoutDashboard className="w-3.5 h-3.5 text-stone-400" /> 영역
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   </header>
-);
+  );
+};
 
 /* ==========================================================================
    Dashboard view
    ========================================================================== */
 
-const Dashboard = ({ items, setView, setFilters, onItemClick }) => {
+const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
   const [showClosed, setShowClosed] = useState(false);
   const closedItems = items.filter(i => TERMINAL.includes(i.status));
 
   const [areaOrder, setAreaOrder] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('raid_area_order')) || AREAS.map(a => a.id); }
-    catch { return AREAS.map(a => a.id); }
+    try { return JSON.parse(localStorage.getItem('raid_area_order')) || areas.map(a => a.id); }
+    catch { return areas.map(a => a.id); }
   });
   const [dragOver, setDragOver] = useState(null);
   const dragIdx = useRef(null);
 
   const orderedAreas = [
-    ...areaOrder.map(id => AREAS.find(a => a.id === id)).filter(Boolean),
-    ...AREAS.filter(a => !areaOrder.includes(a.id)),
+    ...areaOrder.map(id => areas.find(a => a.id === id)).filter(Boolean),
+    ...areas.filter(a => !areaOrder.includes(a.id)),
   ];
 
   const handleDrop = (e, toIdx) => {
@@ -572,7 +593,7 @@ const Dashboard = ({ items, setView, setFilters, onItemClick }) => {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-stone-900 truncate">{item.title}</div>
                     <div className="text-[11px] text-stone-500 font-mono truncate">
-                      {item.id} · {AREA_MAP[item.area]?.name} · {item.owner}
+                      {item.id} · {areaMap[item.area]?.name} · {item.owner}
                     </div>
                   </div>
                   <SeverityBadge severity={item.severity} />
@@ -629,7 +650,7 @@ const Select = ({ value, onChange, options, label }) => (
   </div>
 );
 
-const RAIDLog = ({ items, filters, setFilters, onRowClick, onTransition, onEdit, onDelete }) => {
+const RAIDLog = ({ items, areas, areaMap, filters, setFilters, onRowClick, onTransition, onEdit, onDelete }) => {
   const [openMenu, setOpenMenu] = useState(null);
 
   const clearFilters = () => setFilters({ area: 'all', type: 'all', status: 'all', severity: 'all', search: '' });
@@ -657,7 +678,7 @@ const RAIDLog = ({ items, filters, setFilters, onRowClick, onTransition, onEdit,
         <Select
           label="영역" value={filters.area}
           onChange={(v) => setFilters({ ...filters, area: v })}
-          options={AREAS.map(a => ({ value: a.id, label: a.name }))}
+          options={areas.map(a => ({ value: a.id, label: a.name }))}
         />
         <Select
           label="Type" value={filters.type}
@@ -709,7 +730,7 @@ const RAIDLog = ({ items, filters, setFilters, onRowClick, onTransition, onEdit,
             )}
             {items.map(item => {
               const due = dueChip(item.dueDate);
-              const area = AREA_MAP[item.area];
+              const area = areaMap[item.area];
               const nextStatuses = TRANSITIONS[item.type][item.status] || [];
               return (
                 <tr key={item.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition cursor-pointer"
@@ -811,9 +832,9 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-const DetailDrawer = ({ item, allItems, onSelectItem, onClose, onTransition, onAddComment, onEdit, onDelete }) => {
+const DetailDrawer = ({ item, allItems, areaMap, onSelectItem, onClose, onTransition, onAddComment, onEdit, onDelete }) => {
   const [comment, setComment] = useState('');
-  const area = AREA_MAP[item.area];
+  const area = areaMap[item.area];
   const next = TRANSITIONS[item.type][item.status] || [];
   const due = dueChip(item.dueDate);
 
@@ -962,6 +983,50 @@ const DetailDrawer = ({ item, allItems, onSelectItem, onClose, onTransition, onA
 };
 
 /* ==========================================================================
+   Area creation modal
+   ========================================================================== */
+
+const AreaModal = ({ onClose, onSubmit }) => {
+  const [name, setName] = useState('');
+  const valid = name.trim();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 sticky top-0 bg-white">
+          <h2 className="text-lg font-serif font-semibold text-stone-900">신규 영역 추가</h2>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-100">
+            <X className="w-4 h-4 text-stone-600" />
+          </button>
+        </div>
+        <div className="p-6">
+          <Field label="영역명 *">
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && valid) onSubmit(name.trim()); }}
+              placeholder="예: 배포 및 인프라"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+        <div className="border-t border-stone-200 px-6 py-3 flex justify-end gap-2 bg-stone-50">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100 rounded-md transition">취소</button>
+          <button
+            disabled={!valid}
+            onClick={() => onSubmit(name.trim())}
+            className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded-md hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 transition flex items-center gap-1.5"
+          >
+            <Check className="w-3.5 h-3.5" /> 추가
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ==========================================================================
    Create / Edit modal
    ========================================================================== */
 
@@ -976,11 +1041,11 @@ const Field = ({ label, children }) => (
   </div>
 );
 
-const FormModal = ({ mode, initial, allItems, currentId, onClose, onSubmit }) => {
+const FormModal = ({ mode, initial, areas, allItems, currentId, onClose, onSubmit }) => {
   const [form, setForm] = useState(initial || {
     type: 'Risk',
     title: '',
-    area: AREAS[0].id,
+    area: areas[0]?.id || '',
     status: 'Identified',
     severity: 'Medium',
     owner: '',
@@ -1045,7 +1110,7 @@ const FormModal = ({ mode, initial, allItems, currentId, onClose, onSubmit }) =>
           <div className="grid grid-cols-2 gap-3">
             <Field label="영역">
               <select value={form.area} onChange={(e) => updateForm('area', e.target.value)} className={inputCls}>
-                {AREAS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </Field>
             <Field label="Owner">
@@ -1135,18 +1200,23 @@ function RAIDApp() {
   const saveTimer = useRef(null);
   const loaded = useRef(false);
 
+  const [areas, setAreas] = useState(null);
+
   useEffect(() => {
     fetch(`${BIN_URL}/latest`, {
       headers: { 'X-Master-Key': API_KEY },
     })
       .then(r => r.json())
-      .then(data => { setItems(data.record?.items?.length ? data.record.items : INITIAL_ITEMS); })
-      .catch(() => { setItems(INITIAL_ITEMS); })
+      .then(data => {
+        setItems(data.record?.items?.length ? data.record.items : INITIAL_ITEMS);
+        setAreas(data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS);
+      })
+      .catch(() => { setItems(INITIAL_ITEMS); setAreas(DEFAULT_AREAS); })
       .finally(() => { setLoading(false); });
   }, []);
 
   useEffect(() => {
-    if (items === null) return;
+    if (items === null || areas === null) return;
     if (!loaded.current) { loaded.current = true; return; }
     setSyncState('saving');
     clearTimeout(saveTimer.current);
@@ -1154,12 +1224,12 @@ function RAIDApp() {
       fetch(BIN_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, areas }),
       })
         .then(() => { setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); })
         .catch(() => { setSyncState('error'); });
     }, 800);
-  }, [items]);
+  }, [items, areas]);
   const [filters, setFilters] = useState({ area: 'all', type: 'all', status: 'all', severity: 'all', search: '' });
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalMode, setModalMode] = useState(null);
@@ -1189,14 +1259,23 @@ function RAIDApp() {
     updateItem(id, { comments: [...(item.comments || []), { author: '나', date: dayStr(0), text }] });
   };
 
+  const areaMap = Object.fromEntries((areas ?? []).map(a => [a.id, a]));
+
+  const createArea = (name) => {
+    const id = 'area_' + Date.now().toString(36);
+    setAreas([...(areas ?? []), { id, name }]);
+    setModalMode(null);
+  };
+
   const currentItem = selectedItem ? items.find(i => i.id === selectedItem.id) : null;
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900">
       <Header
         view={view} setView={setView}
-        onCreate={() => setModalMode('create')}
-        onReset={() => { if (confirm('모든 데이터를 초기 상태로 되돌립니다. 계속하시겠습니까?')) setItems(INITIAL_ITEMS); }}
+        onCreateItem={() => setModalMode('create')}
+        onCreateArea={() => setModalMode('createArea')}
+        onReset={() => { if (confirm('모든 데이터를 초기 상태로 되돌립니다. 계속하시겠습니까?')) { setItems(INITIAL_ITEMS); setAreas(DEFAULT_AREAS); } }}
         syncState={syncState}
       />
       {loading && (
@@ -1206,11 +1285,13 @@ function RAIDApp() {
       )}
       {!loading && (<>
         {view === 'dashboard' ? (
-          <Dashboard items={items} setView={setView} setFilters={setFilters}
+          <Dashboard items={items} areas={areas ?? []} areaMap={areaMap} setView={setView} setFilters={setFilters}
             onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }} />
         ) : (
           <RAIDLog
             items={filtered}
+            areas={areas ?? []}
+            areaMap={areaMap}
             filters={filters}
             setFilters={setFilters}
             onRowClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
@@ -1221,19 +1302,23 @@ function RAIDApp() {
         )}
 
         {modalMode === 'create' && (
-          <FormModal mode="create" allItems={items ?? []} currentId={null}
+          <FormModal mode="create" areas={areas ?? []} allItems={items ?? []} currentId={null}
             onClose={() => setModalMode(null)}
             onSubmit={(data) => { createItem(data); setModalMode(null); }} />
         )}
         {modalMode === 'edit' && currentItem && (
-          <FormModal mode="edit" initial={currentItem} allItems={items ?? []} currentId={currentItem.id}
+          <FormModal mode="edit" initial={currentItem} areas={areas ?? []} allItems={items ?? []} currentId={currentItem.id}
             onClose={() => { setModalMode(null); setSelectedItem(null); }}
             onSubmit={(data) => { updateItem(currentItem.id, data); setModalMode(null); setSelectedItem(null); }} />
+        )}
+        {modalMode === 'createArea' && (
+          <AreaModal onClose={() => setModalMode(null)} onSubmit={createArea} />
         )}
         {modalMode === 'detail' && currentItem && (
           <DetailDrawer
             item={currentItem}
             allItems={items ?? []}
+            areaMap={areaMap}
             onSelectItem={(i) => setSelectedItem(i)}
             onClose={() => { setModalMode(null); setSelectedItem(null); }}
             onTransition={transitionStatus}
