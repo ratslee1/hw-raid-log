@@ -518,23 +518,23 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-1.5 group/area">
                           <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
-                            <div className="font-medium text-stone-900 text-sm truncate">{area.name}</div>
-                            {(area.tags || []).length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {(area.tags || []).map(tag => (
-                                  <span key={tag.id}
-                                    className="group/tag inline-flex items-center gap-0.5 pl-1.5 pr-1 py-0.5 rounded-full text-[10px] font-medium text-white cursor-pointer hover:opacity-80 transition"
+                            <div className="flex items-center flex-wrap gap-1.5">
+                              <span className="font-medium text-stone-900 text-sm">{area.name}</span>
+                              {(area.tags || []).map(tag => (
+                                <span key={tag.id} className="group/tag relative inline-flex items-center">
+                                  <span
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold text-white cursor-pointer hover:opacity-80 transition"
                                     style={{ backgroundColor: tag.color }}
                                     onClick={(e) => { e.stopPropagation(); onEditTag(area, tag); }}>
                                     {tag.label}
-                                    <button onClick={(e) => { e.stopPropagation(); onDeleteTag(area.id, tag.id); }}
-                                      className="opacity-0 group-hover/tag:opacity-100 transition-opacity ml-0.5 flex items-center">
-                                      <X className="w-2.5 h-2.5" />
-                                    </button>
                                   </span>
-                                ))}
-                              </div>
-                            )}
+                                  <button onClick={(e) => { e.stopPropagation(); onDeleteTag(area.id, tag.id); }}
+                                    className="absolute -top-1.5 -right-1.5 opacity-0 group-hover/tag:opacity-100 transition-opacity w-3.5 h-3.5 bg-stone-700 rounded-full flex items-center justify-center z-10">
+                                    <X className="w-2 h-2 text-white" />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onAddTag(area); }}
                             className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0" title="태그 추가">
