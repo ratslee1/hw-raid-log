@@ -1086,7 +1086,7 @@ const TAG_PALETTE = [
   '#ec4899','#78716c',
 ];
 
-const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f6' }) => {
+const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f6', existingTags = [] }) => {
   const [label, setLabel] = useState(initialLabel);
   const [color, setColor] = useState(initialColor);
   const valid = label.trim();
@@ -1100,6 +1100,20 @@ const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f
           </button>
         </div>
         <div className="p-5 space-y-4">
+          {existingTags.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-stone-700 mb-2">기존 태그에서 선택</label>
+              <div className="flex flex-wrap gap-1.5">
+                {existingTags.map((t, i) => (
+                  <button key={i} onClick={() => { setLabel(t.label); setColor(t.color); }}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium text-white hover:opacity-80 transition"
+                    style={{ backgroundColor: t.color }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-stone-700 mb-1">태그명 *</label>
             <input
@@ -1479,7 +1493,15 @@ function RAIDApp() {
         )}
         {modalMode === 'addTag' && selectedArea && (
           <TagModal onClose={() => { setModalMode(null); setSelectedArea(null); }}
-            onSubmit={(label, color) => addAreaTag(selectedArea, label, color)} />
+            onSubmit={(label, color) => addAreaTag(selectedArea, label, color)}
+            existingTags={(() => {
+              const seen = new Set();
+              return (areas ?? []).flatMap(a => a.id === selectedArea.id ? [] : (a.tags || [])).filter(t => {
+                const key = t.label + '|' + t.color;
+                if (seen.has(key)) return false;
+                seen.add(key); return true;
+              });
+            })()} />
         )}
         {modalMode === 'editTag' && selectedArea && selectedTag && (
           <TagModal initialLabel={selectedTag.label} initialColor={selectedTag.color}
