@@ -356,7 +356,7 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
    Dashboard view
    ========================================================================== */
 
-const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea }) => {
+const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea, onEditArea }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
   const [showClosed, setShowClosed] = useState(false);
   const closedItems = items.filter(i => TERMINAL.includes(i.status));
@@ -505,10 +505,17 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                           <GripVertical className="w-3 h-3 text-stone-300 cursor-grab active:cursor-grabbing" />
                         </div>
                       </td>
-                      <td className="py-3 pr-4 cursor-pointer"
-                        onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
-                        <div className="font-medium text-stone-900 text-sm">{area.name}</div>
-                        <div className="text-[11px] text-stone-500 font-mono">{area.id}</div>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-1.5 group/area">
+                          <div className="flex-1 cursor-pointer" onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
+                            <div className="font-medium text-stone-900 text-sm">{area.name}</div>
+                            <div className="text-[11px] text-stone-500 font-mono">{area.id}</div>
+                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); onEditArea(area); }}
+                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0">
+                            <Edit3 className="w-3 h-3 text-stone-400" />
+                          </button>
+                        </div>
                       </td>
                       {Object.keys(TYPE_META).map(t => {
                         const c = counts[t];
@@ -993,14 +1000,14 @@ const DetailDrawer = ({ item, allItems, areaMap, onSelectItem, onClose, onTransi
    Area creation modal
    ========================================================================== */
 
-const AreaModal = ({ onClose, onSubmit }) => {
-  const [name, setName] = useState('');
+const AreaModal = ({ onClose, onSubmit, initialName = '' }) => {
+  const [name, setName] = useState(initialName);
   const valid = name.trim();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 sticky top-0 bg-white">
-          <h2 className="text-lg font-serif font-semibold text-stone-900">신규 영역 추가</h2>
+          <h2 className="text-lg font-serif font-semibold text-stone-900">{initialName ? '영역 수정' : '신규 영역 추가'}</h2>
           <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-100">
             <X className="w-4 h-4 text-stone-600" />
           </button>
@@ -1268,9 +1275,17 @@ function RAIDApp() {
 
   const areaMap = Object.fromEntries((areas ?? []).map(a => [a.id, a]));
 
+  const [selectedArea, setSelectedArea] = useState(null);
+
   const createArea = (name) => {
     const id = 'area_' + Date.now().toString(36);
     setAreas([...(areas ?? []), { id, name }]);
+    setModalMode(null);
+  };
+
+  const updateArea = (name) => {
+    setAreas((areas ?? []).map(a => a.id === selectedArea.id ? { ...a, name } : a));
+    setSelectedArea(null);
     setModalMode(null);
   };
 
@@ -1294,7 +1309,8 @@ function RAIDApp() {
         {view === 'dashboard' ? (
           <Dashboard items={items} areas={areas ?? []} areaMap={areaMap} setView={setView} setFilters={setFilters}
             onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
-            onCreateArea={() => setModalMode('createArea')} />
+            onCreateArea={() => setModalMode('createArea')}
+            onEditArea={(a) => { setSelectedArea(a); setModalMode('editArea'); }} />
         ) : (
           <RAIDLog
             items={filtered}
@@ -1321,6 +1337,9 @@ function RAIDApp() {
         )}
         {modalMode === 'createArea' && (
           <AreaModal onClose={() => setModalMode(null)} onSubmit={createArea} />
+        )}
+        {modalMode === 'editArea' && selectedArea && (
+          <AreaModal initialName={selectedArea.name} onClose={() => { setModalMode(null); setSelectedArea(null); }} onSubmit={updateArea} />
         )}
         {modalMode === 'detail' && currentItem && (
           <DetailDrawer
