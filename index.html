@@ -362,7 +362,7 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
    Dashboard view
    ========================================================================== */
 
-const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea, onEditArea }) => {
+const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea, onEditArea, onDeleteArea }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
   const [showClosed, setShowClosed] = useState(false);
   const closedItems = items.filter(i => TERMINAL.includes(i.status));
@@ -520,6 +520,10 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                           <button onClick={(e) => { e.stopPropagation(); onEditArea(area); }}
                             className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0">
                             <Edit3 className="w-3 h-3 text-stone-400" />
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); onDeleteArea(area); }}
+                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-50 transition flex-shrink-0">
+                            <Trash2 className="w-3 h-3 text-red-400" />
                           </button>
                         </div>
                       </td>
@@ -1295,6 +1299,16 @@ function RAIDApp() {
     setModalMode(null);
   };
 
+  const deleteArea = (area) => {
+    const count = (items ?? []).filter(i => i.area === area.id).length;
+    const msg = count > 0
+      ? `'${area.name}' 영역과 연결된 아이템 ${count}개가 모두 삭제됩니다. 계속하시겠습니까?`
+      : `'${area.name}' 영역을 삭제하시겠습니까?`;
+    if (!confirm(msg)) return;
+    setAreas((areas ?? []).filter(a => a.id !== area.id));
+    setItems((items ?? []).filter(i => i.area !== area.id));
+  };
+
   const currentItem = selectedItem ? items.find(i => i.id === selectedItem.id) : null;
 
   return (
@@ -1316,7 +1330,8 @@ function RAIDApp() {
           <Dashboard items={items} areas={areas ?? []} areaMap={areaMap} setView={setView} setFilters={setFilters}
             onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
             onCreateArea={() => setModalMode('createArea')}
-            onEditArea={(a) => { setSelectedArea(a); setModalMode('editArea'); }} />
+            onEditArea={(a) => { setSelectedArea(a); setModalMode('editArea'); }}
+            onDeleteArea={deleteArea} />
         ) : (
           <RAIDLog
             items={filtered}
