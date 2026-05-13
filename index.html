@@ -366,7 +366,7 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
    Dashboard view
    ========================================================================== */
 
-const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea, onEditArea, onDeleteArea }) => {
+const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea, onEditArea, onDeleteArea, onAddTag, onEditTag, onDeleteTag }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
   const [showClosed, setShowClosed] = useState(false);
   const closedItems = items.filter(i => TERMINAL.includes(i.status));
@@ -517,10 +517,30 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                       </td>
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-1.5 group/area">
-                          <div className="flex-1 cursor-pointer" onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
+                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
                             <div className="font-medium text-stone-900 text-sm truncate">{area.name}</div>
                             <div className="text-[11px] text-stone-500 font-mono truncate">{area.id}</div>
+                            {(area.tags || []).length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {(area.tags || []).map(tag => (
+                                  <span key={tag.id}
+                                    className="group/tag inline-flex items-center gap-0.5 pl-1.5 pr-1 py-0.5 rounded-full text-[10px] font-medium text-white cursor-pointer hover:opacity-80 transition"
+                                    style={{ backgroundColor: tag.color }}
+                                    onClick={(e) => { e.stopPropagation(); onEditTag(area, tag); }}>
+                                    {tag.label}
+                                    <button onClick={(e) => { e.stopPropagation(); onDeleteTag(area.id, tag.id); }}
+                                      className="opacity-0 group-hover/tag:opacity-100 transition-opacity ml-0.5 flex items-center">
+                                      <X className="w-2.5 h-2.5" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
+                          <button onClick={(e) => { e.stopPropagation(); onAddTag(area); }}
+                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0" title="태그 추가">
+                            <Plus className="w-3 h-3 text-stone-400" />
+                          </button>
                           <button onClick={(e) => { e.stopPropagation(); onEditArea(area); }}
                             className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0">
                             <Edit3 className="w-3 h-3 text-stone-400" />
@@ -1059,6 +1079,71 @@ const AreaModal = ({ onClose, onSubmit, initialName = '' }) => {
 };
 
 /* ==========================================================================
+   Tag modal
+   ========================================================================== */
+const TAG_PALETTE = [
+  '#ef4444','#f97316','#f59e0b','#eab308',
+  '#22c55e','#14b8a6','#3b82f6','#8b5cf6',
+  '#ec4899','#78716c',
+];
+
+const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f6' }) => {
+  const [label, setLabel] = useState(initialLabel);
+  const [color, setColor] = useState(initialColor);
+  const valid = label.trim();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-xs" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200">
+          <h2 className="text-base font-serif font-semibold text-stone-900">{initialLabel ? '태그 수정' : '태그 추가'}</h2>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-100">
+            <X className="w-4 h-4 text-stone-600" />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-stone-700 mb-1">태그명 *</label>
+            <input
+              autoFocus type="text" value={label}
+              onChange={e => setLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && valid) onSubmit(label.trim(), color); }}
+              placeholder="예: 긴급"
+              className="w-full px-3 py-1.5 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-stone-700 mb-2">색상</label>
+            <div className="flex flex-wrap gap-2">
+              {TAG_PALETTE.map(c => (
+                <button key={c} onClick={() => setColor(c)}
+                  className="w-6 h-6 rounded-full transition-transform hover:scale-110"
+                  style={{ backgroundColor: c, outline: color === c ? `2px solid ${c}` : '2px solid transparent', outlineOffset: '2px' }}
+                />
+              ))}
+            </div>
+          </div>
+          {valid && (
+            <div>
+              <span className="text-[11px] text-stone-400 block mb-1">미리보기</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium text-white" style={{ backgroundColor: color }}>
+                {label.trim()}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="border-t border-stone-200 px-5 py-3 flex justify-end gap-2 bg-stone-50 rounded-b-xl">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100 rounded-md transition">취소</button>
+          <button disabled={!valid} onClick={() => onSubmit(label.trim(), color)}
+            className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded-md hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 transition flex items-center gap-1.5">
+            <Check className="w-3.5 h-3.5" /> {initialLabel ? '수정' : '추가'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ==========================================================================
    Create / Edit modal
    ========================================================================== */
 
@@ -1265,6 +1350,7 @@ function RAIDApp() {
   const [filters, setFilters] = useState({ area: 'all', type: 'all', status: 'all', severity: 'all', search: '' });
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalMode, setModalMode] = useState(null);
+  const [selectedTag, setSelectedTag] = useState(null);
 
   const TYPE_ORDER = { Risk: 0, Assumption: 1, Issue: 2, Dependency: 3 };
   const filtered = useMemo(() => (items ?? []).filter(i => {
@@ -1321,6 +1407,21 @@ function RAIDApp() {
     setItems((items ?? []).filter(i => i.area !== area.id));
   };
 
+  const addAreaTag = (area, label, color) => {
+    const tag = { id: 'tag_' + Date.now().toString(36), label, color };
+    setAreas((areas ?? []).map(a => a.id === area.id ? { ...a, tags: [...(a.tags || []), tag] } : a));
+    setSelectedArea(null); setModalMode(null);
+  };
+  const updateAreaTag = (area, tagId, label, color) => {
+    setAreas((areas ?? []).map(a => a.id === area.id
+      ? { ...a, tags: (a.tags || []).map(t => t.id === tagId ? { ...t, label, color } : t) }
+      : a));
+    setSelectedArea(null); setSelectedTag(null); setModalMode(null);
+  };
+  const deleteAreaTag = (areaId, tagId) => {
+    setAreas((areas ?? []).map(a => a.id === areaId ? { ...a, tags: (a.tags || []).filter(t => t.id !== tagId) } : a));
+  };
+
   const currentItem = selectedItem ? items.find(i => i.id === selectedItem.id) : null;
 
   return (
@@ -1343,7 +1444,10 @@ function RAIDApp() {
             onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
             onCreateArea={() => setModalMode('createArea')}
             onEditArea={(a) => { setSelectedArea(a); setModalMode('editArea'); }}
-            onDeleteArea={deleteArea} />
+            onDeleteArea={deleteArea}
+            onAddTag={(area) => { setSelectedArea(area); setModalMode('addTag'); }}
+            onEditTag={(area, tag) => { setSelectedArea(area); setSelectedTag(tag); setModalMode('editTag'); }}
+            onDeleteTag={deleteAreaTag} />
         ) : (
           <RAIDLog
             items={filtered}
@@ -1373,6 +1477,15 @@ function RAIDApp() {
         )}
         {modalMode === 'editArea' && selectedArea && (
           <AreaModal initialName={selectedArea.name} onClose={() => { setModalMode(null); setSelectedArea(null); }} onSubmit={updateArea} />
+        )}
+        {modalMode === 'addTag' && selectedArea && (
+          <TagModal onClose={() => { setModalMode(null); setSelectedArea(null); }}
+            onSubmit={(label, color) => addAreaTag(selectedArea, label, color)} />
+        )}
+        {modalMode === 'editTag' && selectedArea && selectedTag && (
+          <TagModal initialLabel={selectedTag.label} initialColor={selectedTag.color}
+            onClose={() => { setModalMode(null); setSelectedArea(null); setSelectedTag(null); }}
+            onSubmit={(label, color) => updateAreaTag(selectedArea, selectedTag.id, label, color)} />
         )}
         {modalMode === 'detail' && currentItem && (
           <DetailDrawer
