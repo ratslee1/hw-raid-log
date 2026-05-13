@@ -289,7 +289,7 @@ const dueChip = (due) => {
    Header
    ========================================================================== */
 
-const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState }) => {
+const Header = ({ onCreateItem, onCreateArea, syncState }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
@@ -309,20 +309,14 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
           </div>
         </div>
         <nav className="flex items-center gap-1 bg-stone-100 rounded-lg p-1">
-          <button
-            onClick={() => setView('dashboard')}
-            className={cx('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
-              view === 'dashboard' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-600 hover:text-stone-900')}
-          >
+          <a href="index.html"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition bg-white text-stone-900 shadow-sm">
             <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
-          </button>
-          <button
-            onClick={() => setView('log')}
-            className={cx('flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition',
-              view === 'log' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-600 hover:text-stone-900')}
-          >
+          </a>
+          <a href="log.html"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition text-stone-600 hover:text-stone-900">
             <List className="w-3.5 h-3.5" /> RAID Log
-          </button>
+          </a>
         </nav>
       </div>
       <div className="flex items-center gap-3">
@@ -330,12 +324,6 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
         {syncState === 'saving' && <span className="text-[11px] text-stone-400 font-mono">저장 중…</span>}
         {syncState === 'saved' && <span className="text-[11px] text-emerald-600 font-mono">✓ 저장됨</span>}
         {syncState === 'error' && <span className="text-[11px] text-red-500 font-mono">저장 실패</span>}
-        <button
-          disabled
-          className="flex items-center gap-1.5 px-3 py-1.5 border border-stone-100 text-stone-300 text-xs font-medium rounded-md cursor-not-allowed"
-        >
-          초기화
-        </button>
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setShowMenu(v => !v)}
@@ -366,7 +354,7 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
    Dashboard view
    ========================================================================== */
 
-const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, onCreateArea, onEditArea, onDeleteArea, onAddTag, onEditTag, onDeleteTag }) => {
+const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditArea, onDeleteArea, onAddTag, onEditTag, onDeleteTag }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
   const [showClosed, setShowClosed] = useState(false);
   const closedItems = items.filter(i => TERMINAL.includes(i.status));
@@ -517,7 +505,7 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                       </td>
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-1.5 group/area">
-                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { setFilters({ area: area.id, type: 'all', status: 'all', severity: 'all', search: '' }); setView('log'); }}>
+                          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { location.href = 'log.html?area=' + encodeURIComponent(area.id); }}>
                             <div className="flex items-center flex-wrap gap-1.5">
                               <span className="font-medium text-stone-900 text-sm">{area.name}</span>
                               {(area.tags || []).map(tag => (
@@ -680,186 +668,8 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
 };
 
 /* ==========================================================================
-   RAID Log view
+   RAID Log view  →  log.html
    ========================================================================== */
-
-const Select = ({ value, onChange, options, label }) => (
-  <div className="relative">
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="appearance-none bg-white border border-stone-200 hover:border-stone-300 rounded-md pl-3 pr-8 py-1.5 text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
-    >
-      <option value="all">{label}: 전체</option>
-      {options.map(o => <option key={o.value || o} value={o.value || o}>{o.label || o}</option>)}
-    </select>
-    <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 pointer-events-none" />
-  </div>
-);
-
-const RAIDLog = ({ items, areas, areaMap, filters, setFilters, onRowClick, onTransition, onEdit, onDelete }) => {
-  const [openMenu, setOpenMenu] = useState(null);
-
-  const clearFilters = () => setFilters({ area: 'all', type: 'all', status: 'all', severity: 'all', search: '' });
-  const anyFilterActive = filters.area !== 'all' || filters.type !== 'all' || filters.status !== 'all' || filters.severity !== 'all' || filters.search;
-
-  return (
-    <div className="max-w-[1400px] mx-auto px-6 py-8" onClick={() => setOpenMenu(null)}>
-      <div className="mb-6">
-        <div className="text-[11px] font-mono uppercase tracking-widest text-stone-500 mb-1">RAID Items</div>
-        <h1 className="text-3xl font-serif font-semibold text-stone-900">전체 항목 로그</h1>
-        <p className="text-sm text-stone-600 mt-1">{items.length}건 표시 중</p>
-      </div>
-
-      <div className="bg-white border border-stone-200 rounded-lg p-3 mb-4 flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-          <input
-            type="text"
-            placeholder="제목 검색…"
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="w-full pl-9 pr-3 py-1.5 bg-stone-50 border border-stone-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
-          />
-        </div>
-        <Select
-          label="영역" value={filters.area}
-          onChange={(v) => setFilters({ ...filters, area: v })}
-          options={areas.map(a => ({ value: a.id, label: a.name }))}
-        />
-        <Select
-          label="Type" value={filters.type}
-          onChange={(v) => setFilters({ ...filters, type: v })}
-          options={Object.keys(TYPE_META).map(t => ({ value: t, label: `${t} (${TYPE_META[t].ko})` }))}
-        />
-        <Select
-          label="Status" value={filters.status}
-          onChange={(v) => setFilters({ ...filters, status: v })}
-          options={[...new Set(Object.values(TYPE_META).flatMap(m => m.statuses))]}
-        />
-        <Select
-          label="Severity" value={filters.severity}
-          onChange={(v) => setFilters({ ...filters, severity: v })}
-          options={SEVERITIES}
-        />
-        {anyFilterActive && (
-          <button onClick={clearFilters} className="text-xs text-stone-600 hover:text-stone-900 font-medium px-2 py-1.5 flex items-center gap-1">
-            <X className="w-3 h-3" /> 초기화
-          </button>
-        )}
-      </div>
-
-      <div className="bg-white border border-stone-200 rounded-lg overflow-visible">
-        <table className="w-full text-sm">
-          <thead className="bg-stone-50 border-b border-stone-200">
-            <tr>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-20">ID</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-28">Type</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5">Title</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-36">영역</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-32">Status</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-24">Severity</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-20">Owner</th>
-              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-28">Due</th>
-              <th className="w-10 px-2 py-2.5" />
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 && (
-              <tr>
-                <td colSpan="9" className="text-center py-16 text-stone-500">
-                  <div className="text-sm">조건에 맞는 항목이 없습니다.</div>
-                  {anyFilterActive && (
-                    <button onClick={clearFilters} className="mt-2 text-xs text-stone-900 underline">필터 초기화</button>
-                  )}
-                </td>
-              </tr>
-            )}
-            {items.map(item => {
-              const due = dueChip(item.dueDate);
-              const area = areaMap[item.area];
-              const nextStatuses = TRANSITIONS[item.type][item.status] || [];
-              return (
-                <tr key={item.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition cursor-pointer"
-                  onClick={() => onRowClick(item)}>
-                  <td className="px-4 py-3 font-mono text-xs text-stone-500">{item.id}</td>
-                  <td className="px-4 py-3"><TypeBadge type={item.type} /></td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-stone-900 text-sm">{item.title}</div>
-                    {item.description && (
-                      <div className="text-[11px] text-stone-500 mt-0.5 leading-relaxed"
-                        style={{display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
-                        {item.description}
-                      </div>
-                    )}
-                    {item.comments?.length > 0 && (
-                      <div className="flex items-center gap-1 text-[11px] text-stone-500 mt-0.5">
-                        <MessageSquare className="w-3 h-3" /> {item.comments.length}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-xs text-stone-900">{area?.name}</div>
-                    <div className="text-[11px] text-stone-500 font-mono">{area?.id}</div>
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
-                  <td className="px-4 py-3"><SeverityBadge severity={item.severity} /></td>
-                  <td className="px-4 py-3 text-xs text-stone-700">{item.owner}</td>
-                  <td className="px-4 py-3">
-                    <div className="space-y-0.5">
-                      <Chip className={due.cls}>{due.label}</Chip>
-                      <div className="text-[10px] text-stone-400 font-mono">{item.dueDate}</div>
-                    </div>
-                  </td>
-                  <td className="px-2 py-3 relative">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === item.id ? null : item.id); }}
-                      className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-200 transition"
-                    >
-                      <MoreHorizontal className="w-4 h-4 text-stone-500" />
-                    </button>
-                    {openMenu === item.id && (
-                      <div className="absolute right-2 top-10 z-10 bg-white border border-stone-200 rounded-lg shadow-lg py-1 w-56" onClick={(e) => e.stopPropagation()}>
-                        {nextStatuses.length > 0 && (
-                          <>
-                            <div className="text-[10px] uppercase tracking-wider text-stone-400 px-3 py-1 font-mono">상태 전환</div>
-                            {nextStatuses.map(s => (
-                              <button
-                                key={s}
-                                onClick={() => { onTransition(item.id, s); setOpenMenu(null); }}
-                                className="w-full text-left px-3 py-1.5 text-xs hover:bg-stone-50 flex items-center gap-2"
-                              >
-                                <ArrowRight className="w-3 h-3 text-stone-400" />
-                                <StatusBadge status={s} />
-                              </button>
-                            ))}
-                            <div className="border-t border-stone-100 my-1" />
-                          </>
-                        )}
-                        <button
-                          onClick={() => { onEdit(item); setOpenMenu(null); }}
-                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-stone-50 flex items-center gap-2 text-stone-700"
-                        >
-                          <Edit3 className="w-3 h-3" /> 편집
-                        </button>
-                        <button
-                          onClick={() => { if (confirm(`${item.id} 삭제 확인?`)) { onDelete(item.id); setOpenMenu(null); } }}
-                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-red-50 flex items-center gap-2 text-red-600"
-                        >
-                          <Trash2 className="w-3 h-3" /> 삭제
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
 
 /* ==========================================================================
    Detail drawer
@@ -1323,26 +1133,26 @@ const FormModal = ({ mode, initial, areas, allItems, currentId, onClose, onSubmi
    ========================================================================== */
 
 function RAIDApp() {
-  const [view, setView] = useState('dashboard');
   const [items, setItems] = useState(null);
+  const [areas, setAreas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncState, setSyncState] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalMode, setModalMode] = useState(null);
+  const [selectedArea, setSelectedArea] = useState(null);
+  const [selectedTag, setSelectedTag] = useState(null);
   const saveTimer = useRef(null);
   const loaded = useRef(false);
 
-  const [areas, setAreas] = useState(null);
-
   useEffect(() => {
-    fetch(`${BIN_URL}/latest`, {
-      headers: { 'X-Master-Key': API_KEY },
-    })
+    fetch(`${BIN_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } })
       .then(r => r.json())
       .then(data => {
         setItems(data.record?.items?.length ? data.record.items : INITIAL_ITEMS);
         setAreas(data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS);
       })
       .catch(() => { setItems(INITIAL_ITEMS); setAreas(DEFAULT_AREAS); })
-      .finally(() => { setLoading(false); });
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -1357,33 +1167,18 @@ function RAIDApp() {
         body: JSON.stringify({ items, areas }),
       })
         .then(() => { setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); })
-        .catch(() => { setSyncState('error'); });
+        .catch(() => setSyncState('error'));
     }, 800);
   }, [items, areas]);
-  const [filters, setFilters] = useState({ area: 'all', type: 'all', status: 'all', severity: 'all', search: '' });
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [modalMode, setModalMode] = useState(null);
-  const [selectedTag, setSelectedTag] = useState(null);
 
-  const TYPE_ORDER = { Risk: 0, Assumption: 1, Issue: 2, Dependency: 3 };
-  const filtered = useMemo(() => (items ?? []).filter(i => {
-    if (filters.area !== 'all' && i.area !== filters.area) return false;
-    if (filters.type !== 'all' && i.type !== filters.type) return false;
-    if (filters.status === '__closed__' && !TERMINAL.includes(i.status)) return false;
-    if (filters.status !== 'all' && filters.status !== '__closed__' && i.status !== filters.status) return false;
-    if (filters.severity !== 'all' && i.severity !== filters.severity) return false;
-    if (filters.search && !i.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
-    return true;
-  }).sort((a, b) => TYPE_ORDER[a.type] - TYPE_ORDER[b.type]), [items, filters]);
-
+  const areaMap = Object.fromEntries((areas ?? []).map(a => [a.id, a]));
+  const updateItem = (id, upd) => setItems(items.map(i => i.id === id ? { ...i, ...upd } : i));
+  const deleteItem = (id) => setItems(items.filter(i => i.id !== id));
   const createItem = (data) => {
     const prefix = data.type[0];
     const n = (items ?? []).filter(i => i.type === data.type).length + 1;
-    const newItem = { ...data, id: `${prefix}-${String(n).padStart(2, '0')}`, createdAt: dayStr(0), comments: [] };
-    setItems([newItem, ...items]);
+    setItems([{ ...data, id: `${prefix}-${String(n).padStart(2, '0')}`, createdAt: dayStr(0), comments: [] }, ...items]);
   };
-  const updateItem = (id, updates) => setItems(items.map(i => i.id === id ? { ...i, ...updates } : i));
-  const deleteItem = (id) => setItems(items.filter(i => i.id !== id));
   const transitionStatus = (id, status) => updateItem(id, { status });
   const addComment = (id, text) => {
     const item = items.find(i => i.id === id);
@@ -1393,88 +1188,36 @@ function RAIDApp() {
     const item = items.find(i => i.id === id);
     updateItem(id, { comments: (item.comments || []).filter((_, i) => i !== idx) });
   };
-
-  const areaMap = Object.fromEntries((areas ?? []).map(a => [a.id, a]));
-
-  const [selectedArea, setSelectedArea] = useState(null);
-
-  const createArea = (name) => {
-    const id = 'area_' + Date.now().toString(36);
-    setAreas([...(areas ?? []), { id, name }]);
-    setModalMode(null);
-  };
-
-  const updateArea = (name) => {
-    setAreas((areas ?? []).map(a => a.id === selectedArea.id ? { ...a, name } : a));
-    setSelectedArea(null);
-    setModalMode(null);
-  };
-
+  const createArea = (name) => { setAreas([...(areas ?? []), { id: 'area_' + Date.now().toString(36), name }]); setModalMode(null); };
+  const updateArea = (name) => { setAreas((areas ?? []).map(a => a.id === selectedArea.id ? { ...a, name } : a)); setSelectedArea(null); setModalMode(null); };
   const deleteArea = (area) => {
     const count = (items ?? []).filter(i => i.area === area.id).length;
-    const msg = count > 0
-      ? `'${area.name}' 영역과 연결된 아이템 ${count}개가 모두 삭제됩니다. 계속하시겠습니까?`
-      : `'${area.name}' 영역을 삭제하시겠습니까?`;
-    if (!confirm(msg)) return;
+    if (!confirm(count > 0 ? `'${area.name}' 영역과 연결된 아이템 ${count}개가 모두 삭제됩니다. 계속하시겠습니까?` : `'${area.name}' 영역을 삭제하시겠습니까?`)) return;
     setAreas((areas ?? []).filter(a => a.id !== area.id));
     setItems((items ?? []).filter(i => i.area !== area.id));
   };
+  const addAreaTag = (area, label, color) => { setAreas((areas ?? []).map(a => a.id === area.id ? { ...a, tags: [...(a.tags || []), { id: 'tag_' + Date.now().toString(36), label, color }] } : a)); setSelectedArea(null); setModalMode(null); };
+  const updateAreaTag = (area, tagId, label, color) => { setAreas((areas ?? []).map(a => a.id === area.id ? { ...a, tags: (a.tags || []).map(t => t.id === tagId ? { ...t, label, color } : t) } : a)); setSelectedArea(null); setSelectedTag(null); setModalMode(null); };
+  const deleteAreaTag = (areaId, tagId) => setAreas((areas ?? []).map(a => a.id === areaId ? { ...a, tags: (a.tags || []).filter(t => t.id !== tagId) } : a));
 
-  const addAreaTag = (area, label, color) => {
-    const tag = { id: 'tag_' + Date.now().toString(36), label, color };
-    setAreas((areas ?? []).map(a => a.id === area.id ? { ...a, tags: [...(a.tags || []), tag] } : a));
-    setSelectedArea(null); setModalMode(null);
-  };
-  const updateAreaTag = (area, tagId, label, color) => {
-    setAreas((areas ?? []).map(a => a.id === area.id
-      ? { ...a, tags: (a.tags || []).map(t => t.id === tagId ? { ...t, label, color } : t) }
-      : a));
-    setSelectedArea(null); setSelectedTag(null); setModalMode(null);
-  };
-  const deleteAreaTag = (areaId, tagId) => {
-    setAreas((areas ?? []).map(a => a.id === areaId ? { ...a, tags: (a.tags || []).filter(t => t.id !== tagId) } : a));
-  };
-
-  const currentItem = selectedItem ? items.find(i => i.id === selectedItem.id) : null;
+  const currentItem = selectedItem ? (items ?? []).find(i => i.id === selectedItem.id) : null;
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900">
-      <Header
-        view={view} setView={setView}
-        onCreateItem={() => setModalMode('create')}
-        onCreateArea={() => setModalMode('createArea')}
-        onReset={() => { if (confirm('모든 데이터를 초기 상태로 되돌립니다. 계속하시겠습니까?')) { setItems(INITIAL_ITEMS); setAreas(DEFAULT_AREAS); } }}
-        syncState={syncState}
-      />
-      {loading && (
+      <Header onCreateItem={() => setModalMode('create')} onCreateArea={() => setModalMode('createArea')} syncState={syncState} />
+      {loading ? (
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-sm text-stone-500 font-mono">데이터 불러오는 중…</div>
         </div>
-      )}
-      {!loading && (<>
-        {view === 'dashboard' ? (
-          <Dashboard items={items} areas={areas ?? []} areaMap={areaMap} setView={setView} setFilters={setFilters}
-            onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
-            onCreateArea={() => setModalMode('createArea')}
-            onEditArea={(a) => { setSelectedArea(a); setModalMode('editArea'); }}
-            onDeleteArea={deleteArea}
-            onAddTag={(area) => { setSelectedArea(area); setModalMode('addTag'); }}
-            onEditTag={(area, tag) => { setSelectedArea(area); setSelectedTag(tag); setModalMode('editTag'); }}
-            onDeleteTag={deleteAreaTag} />
-        ) : (
-          <RAIDLog
-            items={filtered}
-            areas={areas ?? []}
-            areaMap={areaMap}
-            filters={filters}
-            setFilters={setFilters}
-            onRowClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
-            onTransition={transitionStatus}
-            onEdit={(i) => { setSelectedItem(i); setModalMode('edit'); }}
-            onDelete={deleteItem}
-          />
-        )}
-
+      ) : (<>
+        <Dashboard items={items ?? []} areas={areas ?? []} areaMap={areaMap}
+          onItemClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
+          onCreateArea={() => setModalMode('createArea')}
+          onEditArea={(a) => { setSelectedArea(a); setModalMode('editArea'); }}
+          onDeleteArea={deleteArea}
+          onAddTag={(area) => { setSelectedArea(area); setModalMode('addTag'); }}
+          onEditTag={(area, tag) => { setSelectedArea(area); setSelectedTag(tag); setModalMode('editTag'); }}
+          onDeleteTag={deleteAreaTag} />
         {modalMode === 'create' && (
           <FormModal mode="create" areas={areas ?? []} allItems={items ?? []} currentId={null}
             onClose={() => setModalMode(null)}
@@ -1485,23 +1228,14 @@ function RAIDApp() {
             onClose={() => { setModalMode(null); setSelectedItem(null); }}
             onSubmit={(data) => { updateItem(currentItem.id, data); setModalMode(null); setSelectedItem(null); }} />
         )}
-        {modalMode === 'createArea' && (
-          <AreaModal onClose={() => setModalMode(null)} onSubmit={createArea} />
-        )}
+        {modalMode === 'createArea' && <AreaModal onClose={() => setModalMode(null)} onSubmit={createArea} />}
         {modalMode === 'editArea' && selectedArea && (
           <AreaModal initialName={selectedArea.name} onClose={() => { setModalMode(null); setSelectedArea(null); }} onSubmit={updateArea} />
         )}
         {modalMode === 'addTag' && selectedArea && (
           <TagModal onClose={() => { setModalMode(null); setSelectedArea(null); }}
             onSubmit={(label, color) => addAreaTag(selectedArea, label, color)}
-            existingTags={(() => {
-              const seen = new Set();
-              return (areas ?? []).flatMap(a => a.id === selectedArea.id ? [] : (a.tags || [])).filter(t => {
-                const key = t.label + '|' + t.color;
-                if (seen.has(key)) return false;
-                seen.add(key); return true;
-              });
-            })()} />
+            existingTags={(() => { const seen = new Set(); return (areas ?? []).flatMap(a => a.id === selectedArea.id ? [] : (a.tags || [])).filter(t => { const k = t.label + '|' + t.color; return seen.has(k) ? false : (seen.add(k), true); }); })()} />
         )}
         {modalMode === 'editTag' && selectedArea && selectedTag && (
           <TagModal initialLabel={selectedTag.label} initialColor={selectedTag.color}
@@ -1509,18 +1243,14 @@ function RAIDApp() {
             onSubmit={(label, color) => updateAreaTag(selectedArea, selectedTag.id, label, color)} />
         )}
         {modalMode === 'detail' && currentItem && (
-          <DetailDrawer
-            item={currentItem}
-            allItems={items ?? []}
-            areaMap={areaMap}
+          <DetailDrawer item={currentItem} allItems={items ?? []} areaMap={areaMap}
             onSelectItem={(i) => setSelectedItem(i)}
             onClose={() => { setModalMode(null); setSelectedItem(null); }}
             onTransition={transitionStatus}
             onAddComment={addComment}
             onDeleteComment={deleteComment}
             onEdit={() => setModalMode('edit')}
-            onDelete={() => { deleteItem(currentItem.id); setModalMode(null); setSelectedItem(null); }}
-          />
+            onDelete={() => { deleteItem(currentItem.id); setModalMode(null); setSelectedItem(null); }} />
         )}
       </>)}
     </div>

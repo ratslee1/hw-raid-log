@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAID Log — AXE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .font-serif { font-family: 'Source Serif Pro', Georgia, serif; }
+    .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    select { background-image: none; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    * { scrollbar-width: thin; scrollbar-color: #d6d3d1 transparent; }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-stone-50">
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
+
+const BIN_ID  = '69fc2157250b1311c315daf3';
+const API_KEY = '$2a$10$zDfNJNpyKC3f605QrYHKMuYqdiNkrs5qlC2J8CpqGBKdGgPjmIy2i';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+/* === Icons === */
+const Svg = ({ children, className = 'w-4 h-4' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+       strokeLinejoin="round" className={className}>{children}</svg>
+);
+const AlertTriangle  = (p) => <Svg {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></Svg>;
+const HelpCircle     = (p) => <Svg {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></Svg>;
+const Zap            = (p) => <Svg {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></Svg>;
+const Link2          = (p) => <Svg {...p}><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/></Svg>;
+const Plus           = (p) => <Svg {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Svg>;
+const Search         = (p) => <Svg {...p}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></Svg>;
+const X              = (p) => <Svg {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Svg>;
+const ChevronDown    = (p) => <Svg {...p}><path d="m6 9 6 6 6-6"/></Svg>;
+const LayoutDashboard= (p) => <Svg {...p}><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></Svg>;
+const List           = (p) => <Svg {...p}><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></Svg>;
+const Trash2         = (p) => <Svg {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6"/><path d="M8 6V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></Svg>;
+const Edit3          = (p) => <Svg {...p}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></Svg>;
+const MessageSquare  = (p) => <Svg {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></Svg>;
+const MoreHorizontal = (p) => <Svg {...p}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></Svg>;
+const Check          = (p) => <Svg {...p}><path d="M20 6 9 17l-5-5"/></Svg>;
+const ArrowRight     = (p) => <Svg {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></Svg>;
+
+/* === Constants === */
+const TYPE_META = {
+  Risk:        { ko: '리스크',   desc: '아직 안 터졌는데 걱정되는 것',   icon: AlertTriangle, tone: 'rose',    statuses: ['Identified', 'Assessed', 'Mitigating', 'Closed'] },
+  Assumption:  { ko: '가정',     desc: '확인 안됐는데 믿고 가는 것',     icon: HelpCircle,    tone: 'amber',   statuses: ['Pending', 'Validated', 'Invalidated'] },
+  Issue:       { ko: '이슈',     desc: '이미 영향 발생한 것',             icon: Zap,           tone: 'violet',  statuses: ['Open', 'In Progress', 'Resolved', 'Closed'] },
+  Dependency:  { ko: '의존성',   desc: '외부 없으면 못하는 것',           icon: Link2,         tone: 'emerald', statuses: ['Pending', 'Active', 'Blocked', 'Resolved'] },
+};
+const TYPE_TONE = {
+  rose:    { bg: 'bg-rose-50',    text: 'text-rose-700',    ring: 'ring-rose-200',    dot: 'bg-rose-500',    solid: 'bg-rose-600' },
+  amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   ring: 'ring-amber-200',   dot: 'bg-amber-500',   solid: 'bg-amber-600' },
+  violet:  { bg: 'bg-violet-50',  text: 'text-violet-700',  ring: 'ring-violet-200',  dot: 'bg-violet-500',  solid: 'bg-violet-600' },
+  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200', dot: 'bg-emerald-500', solid: 'bg-emerald-600' },
+};
+const TRANSITIONS = {
+  Risk:       { Identified: ['Assessed', 'Closed'], Assessed: ['Mitigating', 'Closed'], Mitigating: ['Closed'], Closed: ['Mitigating'] },
+  Assumption: { Pending: ['Validated', 'Invalidated'], Validated: ['Pending'], Invalidated: ['Pending'] },
+  Issue:      { Open: ['In Progress', 'Closed'], 'In Progress': ['Resolved', 'Open'], Resolved: ['Closed', 'In Progress'], Closed: ['Open'] },
+  Dependency: { Pending: ['Active', 'Blocked'], Active: ['Resolved', 'Blocked'], Blocked: ['Active'], Resolved: ['Active'] },
+};
+const STATUS_STYLES = {
+  Identified: 'bg-stone-100 text-stone-700 ring-stone-200', Pending: 'bg-stone-100 text-stone-700 ring-stone-200',
+  Open: 'bg-stone-100 text-stone-700 ring-stone-200', Assessed: 'bg-sky-50 text-sky-700 ring-sky-200',
+  'In Progress': 'bg-sky-50 text-sky-700 ring-sky-200', Active: 'bg-sky-50 text-sky-700 ring-sky-200',
+  Mitigating: 'bg-amber-50 text-amber-800 ring-amber-200', Blocked: 'bg-rose-50 text-rose-700 ring-rose-200',
+  Invalidated: 'bg-rose-50 text-rose-700 ring-rose-200', Validated: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  Resolved: 'bg-emerald-50 text-emerald-700 ring-emerald-200', Closed: 'bg-stone-200/70 text-stone-500 ring-stone-300',
+};
+const SEVERITY_STYLES = {
+  Critical: 'bg-red-600 text-white', High: 'bg-orange-500 text-white',
+  Medium: 'bg-amber-300 text-amber-950', Low: 'bg-sky-100 text-sky-700 ring-1 ring-sky-200',
+};
+const SEVERITY_WEIGHT = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+const SEVERITIES = ['Critical', 'High', 'Medium', 'Low'];
+const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
+const TYPE_ORDER = { Risk: 0, Assumption: 1, Issue: 2, Dependency: 3 };
+
+const DEFAULT_AREAS = [
+  { id: 'API', name: '(툴)API 연동' }, { id: 'ui_info', name: 'UI 정보 (ui_info)' },
+  { id: 'product_info', name: '상품 기준정보' }, { id: '사용자 인증', name: '사용자 인증' },
+  { id: 'PII', name: '개인정보 (PII)' }, { id: 'eval_set', name: '평가셋 작성' },
+  { id: 'gpt_ptu', name: '내부망 GPT PTU' },
+];
+
+const TODAY = new Date();
+const dayStr = (offset) => { const d = new Date(TODAY); d.setDate(d.getDate() + offset); return d.toISOString().slice(0, 10); };
+const dayDiff = (iso) => Math.round((new Date(iso) - TODAY) / 86400000);
+
+/* === Utilities & small components === */
+const cx = (...a) => a.filter(Boolean).join(' ');
+const Chip = ({ className, children }) => (
+  <span className={cx('inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md ring-1', className)}>{children}</span>
+);
+const TypeBadge = ({ type, size = 'md' }) => {
+  const meta = TYPE_META[type]; const tone = TYPE_TONE[meta.tone]; const Icon = meta.icon;
+  if (size === 'sm') return <span className={cx('inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded', tone.bg, tone.text)}><Icon className="w-3 h-3" />{meta.ko}</span>;
+  return <span className={cx('inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md', tone.bg, tone.text)}><Icon className="w-3.5 h-3.5" />{meta.ko}</span>;
+};
+const StatusBadge = ({ status }) => (
+  <Chip className={STATUS_STYLES[status] || 'bg-stone-100 text-stone-700 ring-stone-200'}>{status}</Chip>
+);
+const SeverityBadge = ({ severity }) => (
+  <span className={cx('inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded tracking-wide uppercase', SEVERITY_STYLES[severity])}>{severity}</span>
+);
+const dueChip = (due) => {
+  const diff = dayDiff(due);
+  if (diff < 0) return { cls: 'text-red-700 bg-red-50 ring-red-200', label: `${Math.abs(diff)}일 경과` };
+  if (diff <= 3) return { cls: 'text-orange-700 bg-orange-50 ring-orange-200', label: `D-${diff}` };
+  if (diff <= 7) return { cls: 'text-amber-800 bg-amber-50 ring-amber-200', label: `D-${diff}` };
+  return { cls: 'text-stone-600 bg-stone-50 ring-stone-200', label: `D-${diff}` };
+};
+
+/* === Header === */
+const Header = ({ onCreateItem, syncState }) => (
+  <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-stone-200">
+    <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-8">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-md bg-stone-900 text-white flex items-center justify-center font-serif font-bold text-base">R</div>
+          <div className="leading-tight">
+            <div className="font-semibold text-stone-900 text-sm">RAID Log</div>
+            <div className="text-[11px] text-stone-500 font-mono">AXE</div>
+          </div>
+        </div>
+        <nav className="flex items-center gap-1 bg-stone-100 rounded-lg p-1">
+          <a href="index.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition text-stone-600 hover:text-stone-900">
+            <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+          </a>
+          <a href="log.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition bg-white text-stone-900 shadow-sm">
+            <List className="w-3.5 h-3.5" /> RAID Log
+          </a>
+        </nav>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="text-xs text-stone-500 font-mono">{TODAY.toISOString().slice(0,10)}</div>
+        {syncState === 'saving' && <span className="text-[11px] text-stone-400 font-mono">저장 중…</span>}
+        {syncState === 'saved' && <span className="text-[11px] text-emerald-600 font-mono">✓ 저장됨</span>}
+        {syncState === 'error' && <span className="text-[11px] text-red-500 font-mono">저장 실패</span>}
+        <button onClick={onCreateItem}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-md transition">
+          <Plus className="w-3.5 h-3.5" /> 신규 항목
+        </button>
+      </div>
+    </div>
+  </header>
+);
+
+/* === Select === */
+const Select = ({ value, onChange, options, label }) => (
+  <div className="relative">
+    <select value={value} onChange={(e) => onChange(e.target.value)}
+      className="appearance-none bg-white border border-stone-200 hover:border-stone-300 rounded-md pl-3 pr-8 py-1.5 text-xs font-medium text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent">
+      <option value="all">{label}: 전체</option>
+      {options.map(o => <option key={o.value || o} value={o.value || o}>{o.label || o}</option>)}
+    </select>
+    <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 pointer-events-none" />
+  </div>
+);
+
+/* === RAID Log === */
+const RAIDLog = ({ items, areas, areaMap, filters, setFilters, onRowClick, onTransition, onEdit, onDelete }) => {
+  const [openMenu, setOpenMenu] = useState(null);
+  const clearFilters = () => setFilters({ area: 'all', type: 'all', status: 'all', severity: 'all', search: '' });
+  const anyFilterActive = filters.area !== 'all' || filters.type !== 'all' || filters.status !== 'all' || filters.severity !== 'all' || filters.search;
+
+  return (
+    <div className="max-w-[1400px] mx-auto px-6 py-8" onClick={() => setOpenMenu(null)}>
+      <div className="mb-6">
+        <div className="text-[11px] font-mono uppercase tracking-widest text-stone-500 mb-1">RAID Items</div>
+        <h1 className="text-3xl font-serif font-semibold text-stone-900">전체 항목 로그</h1>
+        <p className="text-sm text-stone-600 mt-1">{items.length}건 표시 중</p>
+      </div>
+
+      <div className="bg-white border border-stone-200 rounded-lg p-3 mb-4 flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input type="text" placeholder="제목 검색…" value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            className="w-full pl-9 pr-3 py-1.5 bg-stone-50 border border-stone-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent" />
+        </div>
+        <Select label="영역" value={filters.area} onChange={(v) => setFilters({ ...filters, area: v })} options={areas.map(a => ({ value: a.id, label: a.name }))} />
+        <Select label="Type" value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={Object.keys(TYPE_META).map(t => ({ value: t, label: `${t} (${TYPE_META[t].ko})` }))} />
+        <Select label="Status" value={filters.status} onChange={(v) => setFilters({ ...filters, status: v })} options={[...new Set(Object.values(TYPE_META).flatMap(m => m.statuses))]} />
+        <Select label="Severity" value={filters.severity} onChange={(v) => setFilters({ ...filters, severity: v })} options={SEVERITIES} />
+        {anyFilterActive && (
+          <button onClick={clearFilters} className="text-xs text-stone-600 hover:text-stone-900 font-medium px-2 py-1.5 flex items-center gap-1">
+            <X className="w-3 h-3" /> 초기화
+          </button>
+        )}
+      </div>
+
+      <div className="bg-white border border-stone-200 rounded-lg overflow-visible">
+        <table className="w-full text-sm">
+          <thead className="bg-stone-50 border-b border-stone-200">
+            <tr>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-20">ID</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-28">Type</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5">Title</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-36">영역</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-32">Status</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-24">Severity</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-20">Owner</th>
+              <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 px-4 py-2.5 w-28">Due</th>
+              <th className="w-10 px-2 py-2.5" />
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 && (
+              <tr><td colSpan="9" className="text-center py-16 text-stone-500">
+                <div className="text-sm">조건에 맞는 항목이 없습니다.</div>
+                {anyFilterActive && <button onClick={clearFilters} className="mt-2 text-xs text-stone-900 underline">필터 초기화</button>}
+              </td></tr>
+            )}
+            {items.map(item => {
+              const due = dueChip(item.dueDate);
+              const area = areaMap[item.area];
+              const nextStatuses = TRANSITIONS[item.type][item.status] || [];
+              return (
+                <tr key={item.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition cursor-pointer" onClick={() => onRowClick(item)}>
+                  <td className="px-4 py-3 font-mono text-xs text-stone-500">{item.id}</td>
+                  <td className="px-4 py-3"><TypeBadge type={item.type} /></td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-stone-900 text-sm">{item.title}</div>
+                    {item.description && (
+                      <div className="text-[11px] text-stone-500 mt-0.5 leading-relaxed"
+                        style={{display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>
+                        {item.description}
+                      </div>
+                    )}
+                    {item.comments?.length > 0 && (
+                      <div className="flex items-center gap-1 text-[11px] text-stone-500 mt-0.5">
+                        <MessageSquare className="w-3 h-3" /> {item.comments.length}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-xs text-stone-900">{area?.name}</div>
+                    <div className="text-[11px] text-stone-500 font-mono">{area?.id}</div>
+                  </td>
+                  <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
+                  <td className="px-4 py-3"><SeverityBadge severity={item.severity} /></td>
+                  <td className="px-4 py-3 text-xs text-stone-700">{item.owner}</td>
+                  <td className="px-4 py-3">
+                    <div className="space-y-0.5">
+                      <Chip className={due.cls}>{due.label}</Chip>
+                      <div className="text-[10px] text-stone-400 font-mono">{item.dueDate}</div>
+                    </div>
+                  </td>
+                  <td className="px-2 py-3 relative">
+                    <button onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === item.id ? null : item.id); }}
+                      className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-200 transition">
+                      <MoreHorizontal className="w-4 h-4 text-stone-500" />
+                    </button>
+                    {openMenu === item.id && (
+                      <div className="absolute right-2 top-10 z-10 bg-white border border-stone-200 rounded-lg shadow-lg py-1 w-56" onClick={(e) => e.stopPropagation()}>
+                        {nextStatuses.length > 0 && (<>
+                          <div className="text-[10px] uppercase tracking-wider text-stone-400 px-3 py-1 font-mono">상태 전환</div>
+                          {nextStatuses.map(s => (
+                            <button key={s} onClick={() => { onTransition(item.id, s); setOpenMenu(null); }}
+                              className="w-full text-left px-3 py-1.5 text-xs hover:bg-stone-50 flex items-center gap-2">
+                              <ArrowRight className="w-3 h-3 text-stone-400" /><StatusBadge status={s} />
+                            </button>
+                          ))}
+                          <div className="border-t border-stone-100 my-1" />
+                        </>)}
+                        <button onClick={() => { onEdit(item); setOpenMenu(null); }}
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-stone-50 flex items-center gap-2 text-stone-700">
+                          <Edit3 className="w-3 h-3" /> 편집
+                        </button>
+                        <button onClick={() => { if (confirm(`${item.id} 삭제 확인?`)) { onDelete(item.id); setOpenMenu(null); } }}
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-red-50 flex items-center gap-2 text-red-600">
+                          <Trash2 className="w-3 h-3" /> 삭제
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+/* === Detail Drawer === */
+const Meta = ({ label, children }) => (
+  <div><div className="text-[11px] font-mono uppercase tracking-wider text-stone-500 mb-1">{label}</div>{children}</div>
+);
+const Section = ({ title, children }) => (
+  <div className="mb-6"><div className="text-[11px] font-mono uppercase tracking-wider text-stone-500 mb-2">{title}</div>{children}</div>
+);
+
+const DetailDrawer = ({ item, allItems, areaMap, onSelectItem, onClose, onTransition, onAddComment, onDeleteComment, onEdit, onDelete }) => {
+  const [comment, setComment] = useState('');
+  const area = areaMap[item.area];
+  const next = TRANSITIONS[item.type][item.status] || [];
+  const due = dueChip(item.dueDate);
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-stone-900/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="w-[560px] bg-white h-full overflow-y-auto shadow-2xl border-l border-stone-200">
+        <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-stone-200 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <TypeBadge type={item.type} />
+            <span className="font-mono text-xs text-stone-500">{item.id}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={onEdit} className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-100 transition" title="편집">
+              <Edit3 className="w-4 h-4 text-stone-600" />
+            </button>
+            <button onClick={() => { if (confirm(`${item.id} 삭제 확인?`)) onDelete(); }}
+              className="w-7 h-7 flex items-center justify-center rounded hover:bg-red-50 transition" title="삭제">
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-100 transition">
+              <X className="w-4 h-4 text-stone-600" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-5">
+          <h1 className="text-xl font-serif font-semibold text-stone-900 leading-snug mb-3">{item.title}</h1>
+          <div className="flex items-center gap-2 mb-5">
+            <StatusBadge status={item.status} />
+            <SeverityBadge severity={item.severity} />
+            <Chip className={due.cls}>{due.label}</Chip>
+          </div>
+
+          {next.length > 0 && (
+            <div className="bg-stone-50 border border-stone-200 rounded-lg p-3 mb-5">
+              <div className="text-[11px] font-mono uppercase tracking-wider text-stone-500 mb-2">상태 전환</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {next.map(s => (
+                  <button key={s} onClick={() => onTransition(item.id, s)}
+                    className="flex items-center gap-1.5 bg-white border border-stone-200 hover:border-stone-900 hover:bg-stone-900 hover:text-white px-2.5 py-1.5 rounded-md text-xs font-medium transition">
+                    <ArrowRight className="w-3 h-3" />{s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 mb-6 py-4 border-y border-stone-200">
+            <Meta label="영역"><div className="text-sm font-medium text-stone-900">{area?.name}</div><div className="text-[11px] text-stone-500 font-mono">{area?.id}</div></Meta>
+            <Meta label="Owner"><div className="text-sm text-stone-900">{item.owner || '—'}</div></Meta>
+            <Meta label="Due Date"><div className="text-sm text-stone-900 font-mono">{item.dueDate}</div></Meta>
+            <Meta label="Created"><div className="text-sm text-stone-900 font-mono">{item.createdAt}</div></Meta>
+          </div>
+
+          {(item.relatedIds || []).length > 0 && (
+            <Section title={`연관 항목 (${item.relatedIds.length})`}>
+              <div className="space-y-1.5">
+                {item.relatedIds.map(rid => {
+                  const rel = allItems.find(i => i.id === rid);
+                  if (!rel) return <div key={rid} className="text-xs text-stone-400 font-mono">{rid} (삭제됨)</div>;
+                  return (
+                    <button key={rid} onClick={() => onSelectItem(rel)}
+                      className="w-full flex items-center gap-2 px-3 py-2 bg-stone-50 hover:bg-stone-100 rounded-lg text-left transition">
+                      <TypeBadge type={rel.type} size="sm" />
+                      <span className="font-mono text-xs text-stone-500 flex-shrink-0">{rel.id}</span>
+                      <span className="text-xs text-stone-700 truncate flex-1">{rel.title}</span>
+                      <StatusBadge status={rel.status} />
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+
+          <Section title="설명">
+            <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{item.description || '—'}</p>
+          </Section>
+          <Section title={item.type === 'Risk' ? 'Mitigation Plan' : item.type === 'Issue' ? 'Resolution' : 'Action / Validation'}>
+            <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{item.mitigation || '—'}</p>
+          </Section>
+
+          <Section title={`Comments (${item.comments?.length || 0})`}>
+            <div className="space-y-3">
+              {(item.comments || []).length === 0 && <div className="text-xs text-stone-500 italic">아직 코멘트가 없습니다.</div>}
+              {(item.comments || []).map((c, idx) => (
+                <div key={idx} className="flex gap-3 group/comment">
+                  <div className="w-7 h-7 rounded-full bg-stone-900 text-white flex items-center justify-center text-[11px] font-medium flex-shrink-0">{c.author.slice(0, 1)}</div>
+                  <div className="flex-1 bg-stone-50 rounded-lg px-3 py-2 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-0.5">
+                      <span className="text-xs font-semibold text-stone-900">{c.author}</span>
+                      <span className="text-[10px] text-stone-500 font-mono">{c.date}</span>
+                      <button onClick={() => onDeleteComment(item.id, idx)}
+                        className="ml-auto opacity-0 group-hover/comment:opacity-100 text-[10px] text-red-400 hover:text-red-600 transition-opacity flex-shrink-0">삭제</button>
+                    </div>
+                    <div className="text-sm text-stone-700 break-words">{c.text}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <input type="text" value={comment} onChange={(e) => setComment(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && comment.trim()) { onAddComment(item.id, comment.trim()); setComment(''); } }}
+                placeholder="코멘트 추가 후 Enter…"
+                className="flex-1 px-3 py-1.5 bg-white border border-stone-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent" />
+              <button disabled={!comment.trim()} onClick={() => { onAddComment(item.id, comment.trim()); setComment(''); }}
+                className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded-md disabled:bg-stone-200 disabled:text-stone-400 hover:bg-stone-800 transition">등록</button>
+            </div>
+          </Section>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* === Form Modal === */
+const inputCls = 'w-full px-3 py-1.5 bg-white border border-stone-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent';
+const Label = ({ children }) => <div className="text-[11px] font-mono uppercase tracking-wider text-stone-500 mb-1.5">{children}</div>;
+const Field = ({ label, children }) => <div><Label>{label}</Label>{children}</div>;
+
+const FormModal = ({ mode, initial, areas, allItems, currentId, onClose, onSubmit }) => {
+  const [form, setForm] = useState(initial || {
+    type: 'Risk', title: '', area: areas[0]?.id || '', status: 'Identified',
+    severity: 'Medium', owner: '', dueDate: dayStr(14), description: '', mitigation: '', relatedIds: [],
+  });
+  const updateForm = (k, v) => { const next = { ...form, [k]: v }; if (k === 'type') next.status = TYPE_META[v].statuses[0]; setForm(next); };
+  const valid = form.title.trim();
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 sticky top-0 bg-white">
+          <h2 className="text-lg font-serif font-semibold text-stone-900">{mode === 'create' ? '신규 항목 생성' : '항목 편집'}</h2>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded hover:bg-stone-100"><X className="w-4 h-4 text-stone-600" /></button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <Label>Type</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {Object.keys(TYPE_META).map(t => {
+                const meta = TYPE_META[t]; const tone = TYPE_TONE[meta.tone]; const Icon = meta.icon; const active = form.type === t;
+                return (
+                  <button key={t} type="button" onClick={() => updateForm('type', t)}
+                    className={cx('flex flex-col items-center gap-1 py-2.5 rounded-md border text-xs transition',
+                      active ? cx(tone.bg, tone.text, 'border-transparent ring-2', tone.ring) : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300')}>
+                    <Icon className="w-4 h-4" /><span className="font-medium">{t}</span><span className="text-[10px] opacity-70">{meta.ko}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Field label="Title *">
+            <input type="text" value={form.title} onChange={(e) => updateForm('title', e.target.value)} placeholder="예: Azure OpenAI 쿼터 부족 가능성" className={inputCls} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="영역"><select value={form.area} onChange={(e) => updateForm('area', e.target.value)} className={inputCls}>{areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
+            <Field label="Owner"><input type="text" value={form.owner} onChange={(e) => updateForm('owner', e.target.value)} placeholder="담당자명" className={inputCls} /></Field>
+            <Field label="Status"><select value={form.status} onChange={(e) => updateForm('status', e.target.value)} className={inputCls}>{TYPE_META[form.type].statuses.map(s => <option key={s}>{s}</option>)}</select></Field>
+            <Field label="Severity"><select value={form.severity} onChange={(e) => updateForm('severity', e.target.value)} className={inputCls}>{SEVERITIES.map(s => <option key={s}>{s}</option>)}</select></Field>
+            <Field label="Due Date"><input type="date" value={form.dueDate} onChange={(e) => updateForm('dueDate', e.target.value)} className={inputCls} /></Field>
+          </div>
+          <Field label="설명"><textarea rows={3} value={form.description} onChange={(e) => updateForm('description', e.target.value)} placeholder="무엇이 문제인지 / 왜 중요한지" className={cx(inputCls, 'resize-none')} /></Field>
+          <Field label={form.type === 'Risk' ? 'Mitigation Plan' : form.type === 'Issue' ? 'Resolution' : 'Action / Validation'}>
+            <textarea rows={2} value={form.mitigation} onChange={(e) => updateForm('mitigation', e.target.value)} placeholder="어떻게 대응할 것인지" className={cx(inputCls, 'resize-none')} />
+          </Field>
+          {allItems.filter(i => i.id !== currentId).length > 0 && (
+            <Field label="연관 항목">
+              <div className="max-h-36 overflow-y-auto border border-stone-200 rounded-md divide-y divide-stone-100">
+                {allItems.filter(i => i.id !== currentId).map(i => (
+                  <label key={i.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-stone-50 cursor-pointer">
+                    <input type="checkbox" checked={(form.relatedIds || []).includes(i.id)}
+                      onChange={(e) => { const next = e.target.checked ? [...(form.relatedIds || []), i.id] : (form.relatedIds || []).filter(id => id !== i.id); updateForm('relatedIds', next); }}
+                      className="rounded border-stone-300" />
+                    <TypeBadge type={i.type} size="sm" />
+                    <span className="font-mono text-xs text-stone-500 flex-shrink-0">{i.id}</span>
+                    <span className="text-xs text-stone-700 truncate">{i.title}</span>
+                  </label>
+                ))}
+              </div>
+            </Field>
+          )}
+        </div>
+        <div className="border-t border-stone-200 px-6 py-3 flex items-center justify-end gap-2 bg-stone-50 sticky bottom-0">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100 rounded-md transition">취소</button>
+          <button disabled={!valid} onClick={() => onSubmit(form)}
+            className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded-md hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 transition flex items-center gap-1.5">
+            <Check className="w-3.5 h-3.5" />{mode === 'create' ? '생성' : '저장'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* === Root === */
+function RAIDApp() {
+  const params = new URLSearchParams(location.search);
+  const [items, setItems] = useState(null);
+  const [areas, setAreas] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [syncState, setSyncState] = useState(null);
+  const [filters, setFilters] = useState({
+    area: params.get('area') || 'all',
+    type: params.get('type') || 'all',
+    status: 'all', severity: 'all', search: '',
+  });
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalMode, setModalMode] = useState(null);
+  const saveTimer = useRef(null);
+  const loaded = useRef(false);
+
+  useEffect(() => {
+    fetch(`${BIN_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } })
+      .then(r => r.json())
+      .then(data => {
+        const loadedItems = data.record?.items?.length ? data.record.items : [];
+        setItems(loadedItems);
+        setAreas(data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS);
+        const itemId = params.get('item');
+        if (itemId) {
+          const found = loadedItems.find(i => i.id === itemId);
+          if (found) { setSelectedItem(found); setModalMode('detail'); }
+        }
+      })
+      .catch(() => { setItems([]); setAreas(DEFAULT_AREAS); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (items === null || areas === null) return;
+    if (!loaded.current) { loaded.current = true; return; }
+    setSyncState('saving');
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch(BIN_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+        body: JSON.stringify({ items, areas }),
+      })
+        .then(() => { setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); })
+        .catch(() => setSyncState('error'));
+    }, 800);
+  }, [items, areas]);
+
+  const areaMap = Object.fromEntries((areas ?? []).map(a => [a.id, a]));
+  const updateItem = (id, upd) => setItems(items.map(i => i.id === id ? { ...i, ...upd } : i));
+  const deleteItem = (id) => setItems(items.filter(i => i.id !== id));
+  const createItem = (data) => {
+    const prefix = data.type[0];
+    const n = (items ?? []).filter(i => i.type === data.type).length + 1;
+    setItems([{ ...data, id: `${prefix}-${String(n).padStart(2, '0')}`, createdAt: dayStr(0), comments: [] }, ...items]);
+  };
+  const transitionStatus = (id, status) => updateItem(id, { status });
+  const addComment = (id, text) => { const item = items.find(i => i.id === id); updateItem(id, { comments: [...(item.comments || []), { author: '나', date: dayStr(0), text }] }); };
+  const deleteComment = (id, idx) => { const item = items.find(i => i.id === id); updateItem(id, { comments: (item.comments || []).filter((_, i) => i !== idx) }); };
+
+  const filtered = useMemo(() => (items ?? []).filter(i => {
+    if (filters.area !== 'all' && i.area !== filters.area) return false;
+    if (filters.type !== 'all' && i.type !== filters.type) return false;
+    if (filters.status !== 'all' && i.status !== filters.status) return false;
+    if (filters.severity !== 'all' && i.severity !== filters.severity) return false;
+    if (filters.search && !i.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    return true;
+  }).sort((a, b) => TYPE_ORDER[a.type] - TYPE_ORDER[b.type]), [items, filters]);
+
+  const currentItem = selectedItem ? (items ?? []).find(i => i.id === selectedItem.id) : null;
+
+  return (
+    <div className="min-h-screen bg-stone-50 text-stone-900">
+      <Header onCreateItem={() => setModalMode('create')} syncState={syncState} />
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-sm text-stone-500 font-mono">데이터 불러오는 중…</div>
+        </div>
+      ) : (<>
+        <RAIDLog items={filtered} areas={areas ?? []} areaMap={areaMap}
+          filters={filters} setFilters={setFilters}
+          onRowClick={(i) => { setSelectedItem(i); setModalMode('detail'); }}
+          onTransition={transitionStatus}
+          onEdit={(i) => { setSelectedItem(i); setModalMode('edit'); }}
+          onDelete={deleteItem} />
+        {modalMode === 'create' && (
+          <FormModal mode="create" areas={areas ?? []} allItems={items ?? []} currentId={null}
+            onClose={() => setModalMode(null)}
+            onSubmit={(data) => { createItem(data); setModalMode(null); }} />
+        )}
+        {modalMode === 'edit' && currentItem && (
+          <FormModal mode="edit" initial={currentItem} areas={areas ?? []} allItems={items ?? []} currentId={currentItem.id}
+            onClose={() => { setModalMode(null); setSelectedItem(null); }}
+            onSubmit={(data) => { updateItem(currentItem.id, data); setModalMode(null); setSelectedItem(null); }} />
+        )}
+        {modalMode === 'detail' && currentItem && (
+          <DetailDrawer item={currentItem} allItems={items ?? []} areaMap={areaMap}
+            onSelectItem={(i) => setSelectedItem(i)}
+            onClose={() => { setModalMode(null); setSelectedItem(null); }}
+            onTransition={transitionStatus}
+            onAddComment={addComment}
+            onDeleteComment={deleteComment}
+            onEdit={() => setModalMode('edit')}
+            onDelete={() => { deleteItem(currentItem.id); setModalMode(null); setSelectedItem(null); }} />
+        )}
+      </>)}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<RAIDApp />);
+  </script>
+</body>
+</html>
