@@ -523,7 +523,7 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                               {(area.tags || []).map(tag => (
                                 <span key={tag.id} className="group/tag relative inline-flex items-center">
                                   <span
-                                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold text-white cursor-pointer hover:opacity-80 transition"
+                                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium text-white cursor-pointer hover:opacity-80 transition"
                                     style={{ backgroundColor: tag.color }}
                                     onClick={(e) => { e.stopPropagation(); onEditTag(area, tag); }}>
                                     {tag.label}
@@ -1081,9 +1081,9 @@ const AreaModal = ({ onClose, onSubmit, initialName = '' }) => {
    Tag modal
    ========================================================================== */
 const TAG_PALETTE = [
-  '#ef4444','#f97316','#f59e0b','#eab308',
-  '#22c55e','#14b8a6','#3b82f6','#8b5cf6',
-  '#ec4899','#78716c',
+  '#b85c58','#b87840','#9a8030','#3e9060',
+  '#2a8880','#4070a8','#6858a0','#a85088',
+  '#6a6060','#5a786a',
 ];
 
 const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f6', existingTags = [] }) => {
