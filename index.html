@@ -426,7 +426,7 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
       <div className="mb-8">
         <div className="text-[11px] font-mono uppercase tracking-widest text-stone-500 mb-1">Project RAID overview</div>
         <h1 className="text-3xl font-serif font-semibold text-stone-900">프로젝트 RAID 현황</h1>
-        <p className="text-sm text-stone-600 mt-1">5개 영역 · {items.length}개 항목 추적 중</p>
+        <p className="text-sm text-stone-600 mt-1">{areas.length}개 영역 · {items.length}개 항목 추적 중</p>
       </div>
 
       <div className="grid grid-cols-4 gap-3 mb-6">
