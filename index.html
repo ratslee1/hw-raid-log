@@ -319,9 +319,8 @@ const Header = ({ view, setView, onCreateItem, onCreateArea, onReset, syncState 
         {syncState === 'saved' && <span className="text-[11px] text-emerald-600 font-mono">✓ 저장됨</span>}
         {syncState === 'error' && <span className="text-[11px] text-red-500 font-mono">저장 실패</span>}
         <button
-          onClick={onReset}
-          className="flex items-center gap-1.5 px-3 py-1.5 border border-stone-200 hover:border-stone-300 hover:bg-stone-100 text-stone-600 text-xs font-medium rounded-md transition"
-          title="초기 데이터로 되돌리기"
+          disabled
+          className="flex items-center gap-1.5 px-3 py-1.5 border border-stone-100 text-stone-300 text-xs font-medium rounded-md cursor-not-allowed"
         >
           초기화
         </button>
