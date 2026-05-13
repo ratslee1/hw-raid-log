@@ -488,7 +488,7 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
               <thead className="sticky top-0 bg-white z-10">
                 <tr className="border-b border-stone-200">
                   <th className="text-center text-[11px] font-mono uppercase tracking-wider text-stone-400 pb-2 w-8">P</th>
-                  <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 pb-2 pr-4">영역</th>
+                  <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 pb-2 pr-4 w-44">영역</th>
                   {Object.keys(TYPE_META).map(t => (
                     <th key={t} className="text-center text-[11px] font-mono uppercase tracking-wider text-stone-500 pb-2 w-10">{t.slice(0,1)}</th>
                   ))}
@@ -523,7 +523,7 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
                               {(area.tags || []).map(tag => (
                                 <span key={tag.id} className="group/tag relative inline-flex items-center">
                                   <span
-                                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold text-white cursor-pointer hover:opacity-80 transition"
+                                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold text-white cursor-pointer hover:opacity-80 transition"
                                     style={{ backgroundColor: tag.color }}
                                     onClick={(e) => { e.stopPropagation(); onEditTag(area, tag); }}>
                                     {tag.label}
@@ -1106,7 +1106,7 @@ const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f
               <div className="flex flex-wrap gap-1.5">
                 {existingTags.map((t, i) => (
                   <button key={i} onClick={() => { setLabel(t.label); setColor(t.color); }}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium text-white hover:opacity-80 transition"
+                    className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium text-white hover:opacity-80 transition"
                     style={{ backgroundColor: t.color }}>
                     {t.label}
                   </button>
@@ -1138,7 +1138,7 @@ const TagModal = ({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f
           {valid && (
             <div>
               <span className="text-[11px] text-stone-400 block mb-1">미리보기</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium text-white" style={{ backgroundColor: color }}>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium text-white" style={{ backgroundColor: color }}>
                 {label.trim()}
               </span>
             </div>
