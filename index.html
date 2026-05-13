@@ -15,6 +15,8 @@
     select {
       background-image: none;
     }
+    .scroll-hover { overflow-y: hidden; }
+    .scroll-hover:hover { overflow-y: auto; }
   </style>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -471,7 +473,7 @@ const Dashboard = ({ items, areas, areaMap, setView, setFilters, onItemClick, on
               </button>
             </div>
           </div>
-          <div className="overflow-x-auto overflow-y-auto max-h-[440px]">
+          <div className="overflow-x-auto max-h-[440px] scroll-hover">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-white z-10">
                 <tr className="border-b border-stone-200">
