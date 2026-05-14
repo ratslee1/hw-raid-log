@@ -41,6 +41,7 @@ const { useState, useMemo, useEffect, useRef } = React;
 const BIN_ID  = '69fc2157250b1311c315daf3';
 const API_KEY = '$2a$10$zDfNJNpyKC3f605QrYHKMuYqdiNkrs5qlC2J8CpqGBKdGgPjmIy2i';
 const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+const CACHE_KEY = 'raid_cache';
 
 /* ==========================================================================
    Icons (inline SVG, drop-in for lucide-react)
@@ -1142,22 +1143,31 @@ function RAIDApp() {
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedTag, setSelectedTag] = useState(null);
   const saveTimer = useRef(null);
-  const loaded = useRef(false);
+  const skipCount = useRef(localStorage.getItem(CACHE_KEY) ? 2 : 1);
 
   useEffect(() => {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const { items: ci, areas: ca } = JSON.parse(cached);
+        setItems(ci); setAreas(ca); setLoading(false);
+      } catch(e) {}
+    }
     fetch(`${BIN_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } })
       .then(r => r.json())
       .then(data => {
-        setItems(data.record?.items?.length ? data.record.items : INITIAL_ITEMS);
-        setAreas(data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS);
+        const fi = data.record?.items?.length ? data.record.items : INITIAL_ITEMS;
+        const fa = data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ items: fi, areas: fa }));
+        setItems(fi); setAreas(fa);
       })
-      .catch(() => { setItems(INITIAL_ITEMS); setAreas(DEFAULT_AREAS); })
+      .catch(() => { if (!cached) { setItems(INITIAL_ITEMS); setAreas(DEFAULT_AREAS); } })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (items === null || areas === null) return;
-    if (!loaded.current) { loaded.current = true; return; }
+    if (skipCount.current > 0) { skipCount.current--; return; }
     setSyncState('saving');
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -1166,7 +1176,7 @@ function RAIDApp() {
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
         body: JSON.stringify({ items, areas }),
       })
-        .then(() => { setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); })
+        .then(() => { localStorage.setItem(CACHE_KEY, JSON.stringify({ items, areas })); setSyncState('saved'); setTimeout(() => setSyncState(null), 2000); })
         .catch(() => setSyncState('error'));
     }, 800);
   }, [items, areas]);
