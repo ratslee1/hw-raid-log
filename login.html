@@ -144,7 +144,6 @@
       try {
         await msalInstance.loginRedirect({
           scopes: ['User.Read', 'openid', 'profile', 'email'],
-          domain_hint: ALLOWED_DOMAIN,
           prompt: 'select_account',
         });
       } catch (e) {
