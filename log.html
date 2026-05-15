@@ -310,9 +310,12 @@ const Section = ({ title, children }) => (
   <div className="mb-6"><div className="text-[11px] font-mono uppercase tracking-wider text-stone-500 mb-2">{title}</div>{children}</div>
 );
 
-const DetailDrawer = ({ item, allItems, areaMap, onSelectItem, onClose, onTransition, onAddComment, onDeleteComment, onEdit, onDelete }) => {
+const DetailDrawer = ({ item, allItems, areaMap, onSelectItem, onClose, onTransition, onAddComment, onDeleteComment, onEditComment, onEdit, onDelete }) => {
   const [comment, setComment] = useState('');
   const [composing, setComposing] = useState(false);
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [editComposing, setEditComposing] = useState(false);
   const area = areaMap[item.area];
   const next = TRANSITIONS[item.type][item.status] || [];
   const due = dueChip(item.dueDate);
@@ -406,10 +409,31 @@ const DetailDrawer = ({ item, allItems, areaMap, onSelectItem, onClose, onTransi
                     <div className="flex items-baseline gap-2 mb-0.5">
                       <span className="text-xs font-semibold text-stone-900">{c.author}</span>
                       <span className="text-[10px] text-stone-500 font-mono">{c.date}</span>
-                      <button onClick={() => onDeleteComment(item.id, idx)}
-                        className="ml-auto opacity-0 group-hover/comment:opacity-100 text-[10px] text-red-400 hover:text-red-600 transition-opacity flex-shrink-0">삭제</button>
+                      <div className="ml-auto flex gap-2 opacity-0 group-hover/comment:opacity-100 transition-opacity flex-shrink-0">
+                        <button onClick={() => { setEditingIdx(idx); setEditText(c.text); }}
+                          className="text-[10px] text-stone-400 hover:text-stone-700">수정</button>
+                        <button onClick={() => onDeleteComment(item.id, idx)}
+                          className="text-[10px] text-red-400 hover:text-red-600">삭제</button>
+                      </div>
                     </div>
-                    <div className="text-sm text-stone-700 break-words">{c.text}</div>
+                    {editingIdx === idx ? (
+                      <div className="flex gap-2 mt-1">
+                        <input autoFocus type="text" value={editText} onChange={e => setEditText(e.target.value)}
+                          onCompositionStart={() => setEditComposing(true)}
+                          onCompositionEnd={() => setEditComposing(false)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && !editComposing && editText.trim()) { onEditComment(item.id, idx, editText.trim()); setEditingIdx(null); }
+                            if (e.key === 'Escape') setEditingIdx(null);
+                          }}
+                          className="flex-1 px-2 py-1 bg-white border border-stone-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-stone-900" />
+                        <button onClick={() => { if (editText.trim()) { onEditComment(item.id, idx, editText.trim()); setEditingIdx(null); } }}
+                          className="px-2 py-1 bg-stone-900 text-white text-xs rounded hover:bg-stone-800">저장</button>
+                        <button onClick={() => setEditingIdx(null)}
+                          className="px-2 py-1 bg-stone-100 text-stone-600 text-xs rounded hover:bg-stone-200">취소</button>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-stone-700 break-words">{c.text}</div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -579,6 +603,7 @@ function RAIDApp() {
   const transitionStatus = (id, status) => updateItem(id, { status });
   const addComment = (id, text) => { const item = items.find(i => i.id === id); updateItem(id, { comments: [...(item.comments || []), { author: '나', date: dayStr(0), text }] }); };
   const deleteComment = (id, idx) => { const item = items.find(i => i.id === id); updateItem(id, { comments: (item.comments || []).filter((_, i) => i !== idx) }); };
+  const editComment = (id, idx, text) => { const item = items.find(i => i.id === id); updateItem(id, { comments: (item.comments || []).map((c, i) => i === idx ? { ...c, text } : c) }); };
 
   const filtered = useMemo(() => (items ?? []).filter(i => {
     if (filters.area !== 'all' && i.area !== filters.area) return false;
@@ -622,6 +647,7 @@ function RAIDApp() {
             onTransition={transitionStatus}
             onAddComment={addComment}
             onDeleteComment={deleteComment}
+            onEditComment={editComment}
             onEdit={() => setModalMode('edit')}
             onDelete={() => { deleteItem(currentItem.id); setModalMode(null); setSelectedItem(null); }} />
         )}
