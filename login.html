@@ -71,7 +71,7 @@
         authority: AZURE_CONFIG.authority,
         redirectUri: AZURE_CONFIG.redirectUri,
       },
-      cache: { cacheLocation: 'sessionStorage' },
+      cache: { cacheLocation: 'localStorage' },
     });
 
     const $btn = document.getElementById('loginBtn');
@@ -110,7 +110,7 @@
         return;
       }
 
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
         email,
         name: account.name || email,
         loginAt: Date.now(),

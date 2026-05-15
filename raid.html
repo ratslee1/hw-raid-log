@@ -6,7 +6,7 @@
   <title>RAID Log — AXE</title>
   <script>
     (function() {
-      var session = sessionStorage.getItem('raid_auth');
+      var session = localStorage.getItem('raid_auth');
       if (!session) { window.location.replace('login.html'); }
     })();
   </script>
