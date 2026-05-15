@@ -65,7 +65,7 @@
     const ALLOWED_EMAIL = 'sangheun.lee@kt.com';
     const SESSION_KEY = 'raid_auth';
 
-    const msal = new msal.PublicClientApplication({
+    const msalInstance = new msal.PublicClientApplication({
       auth: {
         clientId: AZURE_CONFIG.clientId,
         authority: AZURE_CONFIG.authority,
@@ -100,12 +100,12 @@
     async function handleSuccess(account) {
       const email = getEmail(account);
       if (email !== ALLOWED_EMAIL) {
-        await msal.logoutRedirect({
+        await msalInstance.logoutRedirect({
           account,
           postLogoutRedirectUri: AZURE_CONFIG.redirectUri,
           onRedirectNavigate: () => false,
         }).catch(() => {});
-        msal.clearCache();
+        msalInstance.clearCache();
         showError(`접근 권한이 없습니다. (현재: ${email || '알 수 없음'})`);
         return;
       }
@@ -119,14 +119,14 @@
       window.location.replace('index.html');
     }
 
-    msal.initialize().then(async () => {
+    msalInstance.initialize().then(async () => {
       try {
-        const result = await msal.handleRedirectPromise();
+        const result = await msalInstance.handleRedirectPromise();
         if (result?.account) {
           await handleSuccess(result.account);
           return;
         }
-        const accounts = msal.getAllAccounts();
+        const accounts = msalInstance.getAllAccounts();
         if (accounts.length > 0) {
           await handleSuccess(accounts[0]);
           return;
@@ -142,7 +142,7 @@
       $btn.disabled = true;
       $btnText.textContent = '리다이렉트 중...';
       try {
-        await msal.loginRedirect({
+        await msalInstance.loginRedirect({
           scopes: ['User.Read', 'openid', 'profile', 'email'],
           domain_hint: ALLOWED_DOMAIN,
           prompt: 'select_account',
