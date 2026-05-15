@@ -126,6 +126,10 @@
           await handleSuccess(result.account);
           return;
         }
+        if (!localStorage.getItem(SESSION_KEY)) {
+          msalInstance.clearCache();
+          return;
+        }
         const accounts = msalInstance.getAllAccounts();
         if (accounts.length > 0) {
           await handleSuccess(accounts[0]);
