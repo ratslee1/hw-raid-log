@@ -8,7 +8,7 @@ env:
   ACR_NAME: raidlogacr
   IMAGE_NAME: raid-log
   APP_NAME: raid-log-app
-  RESOURCE_GROUP: raid-log-rg
+  RESOURCE_GROUP: sangheun-test-personal-krc-rg001-629
 
 jobs:
   deploy:

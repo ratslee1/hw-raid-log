@@ -2,16 +2,11 @@
 # 최초 1회만 실행. Azure 리소스 생성 + GitHub Secret 값 출력.
 set -e
 
-RESOURCE_GROUP="raid-log-rg"
-LOCATION="koreacentral"
+RESOURCE_GROUP="sangheun-test-personal-krc-rg001-629"
 ACR_NAME="raidlogacr"
 IMAGE_NAME="raid-log"
 APP_PLAN="raid-log-plan"
 APP_NAME="raid-log-app"
-
-az login
-
-az group create --name $RESOURCE_GROUP --location $LOCATION
 
 az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
 
