@@ -4,10 +4,12 @@ import { marked } from 'marked';
 import { cx, TODAY, dueChip, dayDiff } from '../utils';
 import { TYPE_META, TYPE_TONE, SEVERITY_STYLES, SEVERITY_WEIGHT, SEVERITIES, TERMINAL, AZURE_ENDPOINT, AZURE_DEPLOYMENT, AZURE_API_VERSION, AZURE_KEY } from '../constants';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from '../components/badges';
-import { Plus, Edit3, Trash2, X, GripVertical, Sparkles, Circle } from '../components/icons';
+import { Plus, Edit3, Trash2, X, GripVertical, Sparkles, Circle, RefreshCw } from '../components/icons';
 
 export default function Dashboard({ items, areas, areaMap, onItemClick, onCreateArea, onEditArea, onDeleteArea, onAddTag, onEditTag, onDeleteTag }) {
   const navigate = useNavigate();
+  const REPORT_CACHE_KEY = `raid_report_${TODAY.toISOString().slice(0, 10)}`;
+
   const [showClosed, setShowClosed] = useState(false);
   const [reportModal, setReportModal] = useState(false);
   const [reportText, setReportText] = useState('');
@@ -18,6 +20,12 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
   });
   const [dragOver, setDragOver] = useState(null);
   const dragIdx = useRef(null);
+
+  const openReport = () => {
+    const cached = localStorage.getItem(REPORT_CACHE_KEY);
+    if (cached) { setReportText(cached); setReportModal(true); }
+    else generateReport();
+  };
 
   const generateReport = async () => {
     setReportModal(true);
@@ -110,7 +118,9 @@ ${sections.join('\n\n')}`;
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
-      setReportText(data.choices[0].message.content);
+      const content = data.choices[0].message.content;
+      setReportText(content);
+      localStorage.setItem(REPORT_CACHE_KEY, content);
     } catch (e) {
       setReportText(`오류: ${e.message}`);
     } finally {
@@ -347,7 +357,7 @@ ${sections.join('\n\n')}`;
             {showClosed && closedItems.length === 0 && (
               <div className="mt-2 text-xs text-stone-400 italic">종결된 항목이 없습니다.</div>
             )}
-            <button onClick={generateReport}
+            <button onClick={openReport}
               className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-md transition">
               <Sparkles className="w-3.5 h-3.5" /> AI 요약 보고서
             </button>
@@ -413,7 +423,13 @@ ${sections.join('\n\n')}`;
               <h2 className="font-serif font-semibold text-stone-900">AI 요약 보고서</h2>
               <span className="text-[11px] text-stone-400 font-mono">{new Date().toISOString().slice(0, 10)}</span>
             </div>
-            <button onClick={() => setReportModal(false)} className="text-stone-400 hover:text-stone-700 transition"><X className="w-4 h-4" /></button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => { localStorage.removeItem(REPORT_CACHE_KEY); generateReport(); }}
+                title="새로 생성" className="text-stone-400 hover:text-stone-700 transition p-1 rounded hover:bg-stone-100">
+                <RefreshCw className="w-4 h-4" />
+              </button>
+              <button onClick={() => setReportModal(false)} className="text-stone-400 hover:text-stone-700 transition p-1 rounded hover:bg-stone-100"><X className="w-4 h-4" /></button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-5">
             {reportLoading ? (
