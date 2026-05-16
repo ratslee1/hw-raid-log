@@ -33,7 +33,17 @@
     .scroll-hover::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
     .scroll-hover:hover::-webkit-scrollbar-thumb { background: #d6d3d1; }
     .scroll-hover:hover::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+    .md-report h1,.md-report h2,.md-report h3 { font-weight:600; margin:1em 0 .4em; }
+    .md-report h1 { font-size:1.1rem; }
+    .md-report h2 { font-size:1rem; }
+    .md-report h3 { font-size:.9rem; }
+    .md-report p { margin:.4em 0; line-height:1.7; }
+    .md-report ul,.md-report ol { padding-left:1.4em; margin:.4em 0; }
+    .md-report li { margin:.2em 0; line-height:1.6; }
+    .md-report strong { font-weight:600; color:#1c1917; }
+    .md-report hr { border:none; border-top:1px solid #e7e5e4; margin:1em 0; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -741,7 +751,7 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
                 보고서 생성 중...
               </div>
             ) : (
-              <pre className="text-sm text-stone-700 whitespace-pre-wrap font-sans leading-relaxed">{reportText}</pre>
+              <div className="md-report text-sm text-stone-700" dangerouslySetInnerHTML={{ __html: marked.parse(reportText) }} />
             )}
           </div>
           {!reportLoading && reportText && (
