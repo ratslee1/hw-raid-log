@@ -76,6 +76,7 @@ const MoreHorizontal = (p) => <Svg {...p}><circle cx="12" cy="12" r="1"/><circle
 const Check          = (p) => <Svg {...p}><path d="M20 6 9 17l-5-5"/></Svg>;
 const ArrowRight     = (p) => <Svg {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></Svg>;
 const GripVertical   = (p) => <Svg {...p}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></Svg>;
+const Sparkles       = (p) => <Svg {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></Svg>;
 
 /* ==========================================================================
    Constants
@@ -368,6 +369,45 @@ const Header = ({ onCreateItem, onCreateArea, syncState }) => {
 const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditArea, onDeleteArea, onAddTag, onEditTag, onDeleteTag }) => {
   const TERMINAL = ['Closed', 'Resolved', 'Validated', 'Invalidated'];
   const [showClosed, setShowClosed] = useState(false);
+  const [reportModal, setReportModal] = useState(false);
+  const [reportText, setReportText] = useState('');
+  const [reportLoading, setReportLoading] = useState(false);
+
+  const generateReport = async () => {
+    let apiKey = localStorage.getItem('raid_openai_key');
+    if (!apiKey) {
+      apiKey = prompt('OpenAI API Key를 입력하세요 (최초 1회 저장됩니다):');
+      if (!apiKey) return;
+      localStorage.setItem('raid_openai_key', apiKey.trim());
+    }
+    setReportModal(true);
+    setReportLoading(true);
+    setReportText('');
+    const today = new Date().toISOString().slice(0, 10);
+    const openItems = items.filter(i => !TERMINAL.includes(i.status));
+    const context = openItems.map(i =>
+      `[${i.type}] ${i.id}: ${i.title} | 상태: ${i.status} | 심각도: ${i.severity || '-'} | 영역: ${areaMap[i.area]?.name || '-'} | 담당: ${i.owner || '-'} | 기한: ${i.dueDate || '-'}${i.description ? ' | 설명: ' + i.description : ''}`
+    ).join('\n');
+    const areaList = areas.map(a => a.name).join(', ');
+    try {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('raid_openai_key')}` },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content: `오늘(${today}) 기준 프로젝트 RAID 현황 요약 보고서를 한국어로 작성해주세요.\n\n영역: ${areaList}\n오픈 항목 ${openItems.length}건:\n${context}\n\n[형식]\n1. 전체 요약 (2~3문장)\n2. 주요 리스크 & 이슈\n3. 병목/블로킹 의존성\n4. 권고 조치사항` }],
+          max_tokens: 1500,
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      setReportText(data.choices[0].message.content);
+    } catch (e) {
+      setReportText(`오류: ${e.message}`);
+    } finally {
+      setReportLoading(false);
+    }
+  };
   const closedItems = items.filter(i => TERMINAL.includes(i.status));
 
   const [areaOrder, setAreaOrder] = useState(() => {
@@ -620,6 +660,10 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
             {showClosed && closedItems.length === 0 && (
               <div className="mt-2 text-xs text-stone-400 italic">종결된 항목이 없습니다.</div>
             )}
+            <button onClick={generateReport}
+              className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-md transition">
+              <Sparkles className="w-3.5 h-3.5" /> AI 요약 보고서
+            </button>
           </div>
         </div>
       </div>
@@ -675,6 +719,39 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
         </div>
       </div>
     </div>
+
+    {reportModal && (
+      <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" onClick={(e) => { if (e.target === e.currentTarget) setReportModal(false); }}>
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-stone-600" />
+              <h2 className="font-serif font-semibold text-stone-900">AI 요약 보고서</h2>
+              <span className="text-[11px] text-stone-400 font-mono">{new Date().toISOString().slice(0,10)}</span>
+            </div>
+            <button onClick={() => setReportModal(false)} className="text-stone-400 hover:text-stone-700 transition"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5">
+            {reportLoading ? (
+              <div className="flex items-center gap-2 text-sm text-stone-500">
+                <span className="animate-spin inline-block w-4 h-4 border-2 border-stone-300 border-t-stone-700 rounded-full" />
+                보고서 생성 중...
+              </div>
+            ) : (
+              <pre className="text-sm text-stone-700 whitespace-pre-wrap font-sans leading-relaxed">{reportText}</pre>
+            )}
+          </div>
+          {!reportLoading && reportText && (
+            <div className="px-5 py-3 border-t border-stone-100 flex justify-between items-center">
+              <button onClick={() => { localStorage.removeItem('raid_openai_key'); alert('API Key가 삭제되었습니다.'); }}
+                className="text-xs text-stone-400 hover:text-stone-600 transition">API Key 초기화</button>
+              <button onClick={() => navigator.clipboard.writeText(reportText)}
+                className="text-xs text-stone-600 hover:text-stone-900 font-medium transition">클립보드 복사</button>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
   );
 };
 
