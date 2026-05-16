@@ -31,8 +31,13 @@ jobs:
 
       - name: Deploy to App Service
         run: |
+          ACR_PASSWORD=$(az acr credential show --name ${{ env.ACR_NAME }} --query passwords[0].value -o tsv)
           az webapp config container set \
             --name ${{ env.APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --container-image-name ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            --container-image-name ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --container-registry-url https://${{ env.ACR_NAME }}.azurecr.io \
+            --container-registry-user ${{ env.ACR_NAME }} \
+            --container-registry-password "$ACR_PASSWORD"
+          az webapp restart --name ${{ env.APP_NAME }} --resource-group ${{ env.RESOURCE_GROUP }}
           echo "✅ 배포 완료: https://${{ env.APP_NAME }}.azurewebsites.net"
