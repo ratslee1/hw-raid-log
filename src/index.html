@@ -374,16 +374,11 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
   const [reportLoading, setReportLoading] = useState(false);
 
   const AZURE_ENDPOINT = 'https://aif-lsh-test-251127.cognitiveservices.azure.com';
+  const AZURE_DEPLOYMENT = 'gpt-5.4-mini';
   const AZURE_API_VERSION = '2024-12-01-preview';
-  const AZURE_DEPLOYMENT = 'gpt-4o'; // Azure OpenAI 배포 이름
+  const AZURE_KEY = '__AZURE_OPENAI_KEY__';
 
   const generateReport = async () => {
-    let apiKey = localStorage.getItem('raid_azure_openai_key');
-    if (!apiKey) {
-      apiKey = prompt('Azure OpenAI API Key를 입력하세요 (최초 1회 저장됩니다):');
-      if (!apiKey) return;
-      localStorage.setItem('raid_azure_openai_key', apiKey.trim());
-    }
     setReportModal(true);
     setReportLoading(true);
     setReportText('');
@@ -397,10 +392,13 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'api-key': localStorage.getItem('raid_azure_openai_key') },
+        headers: { 'Content-Type': 'application/json', 'api-key': AZURE_KEY },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: `오늘(${today}) 기준 프로젝트 RAID 현황 요약 보고서를 한국어로 작성해주세요.\n\n영역: ${areaList}\n오픈 항목 ${openItems.length}건:\n${context}\n\n[형식]\n1. 전체 요약 (2~3문장)\n2. 주요 리스크 & 이슈\n3. 병목/블로킹 의존성\n4. 권고 조치사항` }],
-          max_tokens: 1500,
+          messages: [
+            { role: 'system', content: 'You are a helpful project management assistant. Always respond in Korean.' },
+            { role: 'user', content: `오늘(${today}) 기준 프로젝트 RAID 현황 요약 보고서를 한국어로 작성해주세요.\n\n영역: ${areaList}\n오픈 항목 ${openItems.length}건:\n${context}\n\n[형식]\n1. 전체 요약 (2~3문장)\n2. 주요 리스크 & 이슈\n3. 병목/블로킹 의존성\n4. 권고 조치사항` }
+          ],
+          max_completion_tokens: 2000,
         })
       });
       const data = await res.json();
@@ -746,9 +744,7 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
             )}
           </div>
           {!reportLoading && reportText && (
-            <div className="px-5 py-3 border-t border-stone-100 flex justify-between items-center">
-              <button onClick={() => { localStorage.removeItem('raid_azure_openai_key'); alert('API Key가 삭제되었습니다.'); }}
-                className="text-xs text-stone-400 hover:text-stone-600 transition">API Key 초기화</button>
+            <div className="px-5 py-3 border-t border-stone-100 flex justify-end">
               <button onClick={() => navigator.clipboard.writeText(reportText)}
                 className="text-xs text-stone-600 hover:text-stone-900 font-medium transition">클립보드 복사</button>
             </div>
