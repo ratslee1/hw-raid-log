@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+.font-serif { font-family: 'Source Serif Pro', Georgia, serif; }
+.font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+select { background-image: none; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+* { scrollbar-width: thin; scrollbar-color: #d6d3d1 transparent; }
+
+.scroll-hover { overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.scroll-hover:hover { scrollbar-color: #d6d3d1 transparent; }
+.scroll-hover::-webkit-scrollbar { width: 4px; }
+.scroll-hover::-webkit-scrollbar-track { background: transparent; }
+.scroll-hover::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
+.scroll-hover:hover::-webkit-scrollbar-thumb { background: #d6d3d1; }
+.scroll-hover:hover::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+
+.md-report { color: #1c1917; }
+.md-report h1 { font-size:1.15rem; font-weight:700; color:#0c0a09; margin:1.4em 0 .5em; padding-bottom:.3em; border-bottom:2px solid #e7e5e4; font-family:'Source Serif Pro',Georgia,serif; }
+.md-report h2 { font-size:1rem; font-weight:700; color:#1c1917; margin:1.2em 0 .4em; padding:.3em .6em; background:#f5f5f4; border-left:3px solid #292524; border-radius:0 4px 4px 0; }
+.md-report h3 { font-size:.9rem; font-weight:600; color:#292524; margin:.9em 0 .3em; }
+.md-report h4 { font-size:.85rem; font-weight:600; color:#44403c; margin:.7em 0 .2em; }
+.md-report p { margin:.5em 0; line-height:1.75; }
+.md-report ul { padding-left:1.5em; margin:.4em 0; list-style:disc; }
+.md-report ol { padding-left:1.5em; margin:.4em 0; list-style:decimal; }
+.md-report li { margin:.3em 0; line-height:1.7; }
+.md-report li::marker { color:#78716c; }
+.md-report strong { font-weight:700; color:#0c0a09; }
+.md-report em { color:#57534e; font-style:italic; }
+.md-report hr { border:none; border-top:1px solid #e7e5e4; margin:1.2em 0; }
+.md-report blockquote { border-left:3px solid #d6d3d1; padding:.3em .8em; margin:.5em 0; color:#57534e; background:#fafaf9; border-radius:0 4px 4px 0; }

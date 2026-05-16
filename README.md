@@ -4,7 +4,8 @@
 
 ## 기술 스택
 
-- **Frontend** — React 18 (CDN), Tailwind CSS
+- **Frontend** — React 18, React Router v6, Tailwind CSS v3
+- **빌드** — Vite 5
 - **인증** — Azure AD (MSAL.js v2, 단일 계정 제한)
 - **데이터** — JSONbin.io (REST API)
 - **배포** — Docker + Azure Container Registry + Azure App Service
@@ -13,25 +14,40 @@
 ## 프로젝트 구조
 
 ```
-├── src/                  # HTML 앱 파일
-│   ├── index.html        # 대시보드 (메인)
-│   ├── login.html        # Azure AD 로그인
-│   └── log.html          # RAID 전체 목록
+├── src/
+│   ├── App.jsx               # 라우터 + 전역 상태 + 모달
+│   ├── constants.js          # 타입/상태/색상 등 공통 상수
+│   ├── utils.js              # 날짜 유틸, cx, ME
+│   ├── index.css             # Tailwind + 커스텀 스타일
+│   ├── components/
+│   │   ├── icons.jsx
+│   │   ├── badges.jsx        # TypeBadge, StatusBadge, SeverityBadge
+│   │   ├── Header.jsx
+│   │   ├── Select.jsx
+│   │   ├── DetailDrawer.jsx
+│   │   ├── FormModal.jsx
+│   │   ├── AreaModal.jsx
+│   │   └── TagModal.jsx
+│   ├── hooks/
+│   │   └── useRAIDStore.js   # 데이터 fetch/save + CRUD
+│   └── pages/
+│       ├── Dashboard.jsx     # / 대시보드 (AI 보고서 포함)
+│       └── Log.jsx           # /log 전체 항목 테이블
+├── public/
+│   └── login.html            # Azure AD 로그인 (MSAL.js, Vite 빌드 외)
+├── index.html                # Vite SPA 엔트리
+├── nginx.conf                # SPA 라우팅용 try_files 설정
 ├── .github/workflows/
-│   └── deploy.yml        # CI/CD 파이프라인
-├── scripts/
-│   └── setup-azure.sh    # Azure 리소스 최초 설정 (1회)
-├── docs/
-│   └── apps-script.md    # Google Apps Script 연동 참고
-└── Dockerfile
+│   └── deploy.yml            # CI/CD 파이프라인
+└── Dockerfile                # 멀티스테이지: node 빌드 → nginx 서빙
 ```
 
 ## 배포 구조
 
 ```
 GitHub push → GitHub Actions
-  → src/index.html에 Azure OpenAI Key 주입
-  → Docker 빌드 (nginx:alpine)
+  → npm run build (VITE_AZURE_OPENAI_KEY 빌드 시 주입)
+  → Docker 빌드 (node:20-alpine → nginx:alpine)
   → Azure Container Registry 푸시
   → Azure App Service 컨테이너 업데이트
 ```
@@ -39,16 +55,16 @@ GitHub push → GitHub Actions
 ## 로컬 실행
 
 ```bash
-docker build -t raid-log .
-docker run -p 8080:80 raid-log
-# http://localhost:8080/login.html
+npm install
+npm run dev
+# http://localhost:5173  (로그인 없이 개발 가능)
 ```
 
-## Azure 리소스 최초 설정
-
+Docker로 빌드 확인:
 ```bash
-# Azure Cloud Shell에서 실행
-bash <(curl -sL https://raw.githubusercontent.com/ratslee1/hw-raid-log/main/scripts/setup-azure.sh)
+docker build --build-arg VITE_AZURE_OPENAI_KEY=your_key -t raid-log .
+docker run -p 8080:80 raid-log
+# http://localhost:8080/login.html
 ```
 
 ## GitHub Secrets
@@ -56,4 +72,5 @@ bash <(curl -sL https://raw.githubusercontent.com/ratslee1/hw-raid-log/main/scri
 | Secret 이름 | 설명 |
 |---|---|
 | `AZURE_CREDENTIALS` | Azure 서비스 주체 JSON (App Service 배포 권한) |
-| `AZURE_OPENAI_KEY` | Azure OpenAI API Key (AI 보고서 기능) |
+| `AZURE_OPENAI_KEY` | Azure OpenAI API Key (AI 보고서 기능, 빌드 시 주입) |
+| `ACR_PASSWORD` | Azure Container Registry 비밀번호 |

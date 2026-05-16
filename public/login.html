@@ -49,15 +49,8 @@
   </div>
 
   <script>
-    // ============================================================
-    //  Azure AD 설정 — Azure Portal > App Registrations 에서 발급
-    //  TODO: clientId 와 (선택) tenantId 를 실제 값으로 교체
-    //   - Redirect URI 는 이 페이지의 정확한 URL 로 등록 (예: https://your-host/login.html)
-    //   - Platform: Single-page application (SPA)
-    // ============================================================
     const AZURE_CONFIG = {
       clientId: '592da474-ca81-42a7-9c2c-aeaf2934a4a9',
-      // kt.com 전용 테넌트가 있으면 그 tenantId 로 교체. 모르면 'organizations' 유지.
       authority: 'https://login.microsoftonline.com/28fad9d9-3a2c-4a2f-b76f-8da5d0da9756',
       redirectUri: 'https://raid-log-app.azurewebsites.net/login.html',
     };
@@ -105,7 +98,6 @@
           postLogoutRedirectUri: AZURE_CONFIG.redirectUri,
           onRedirectNavigate: () => false,
         }).catch(() => {});
-        msalInstance.clearCache();
         showError(`접근 권한이 없습니다. (현재: ${email || '알 수 없음'})`);
         return;
       }
@@ -116,7 +108,7 @@
         loginAt: Date.now(),
       }));
 
-      window.location.replace('index.html');
+      window.location.replace('/');
     }
 
     msalInstance.initialize().then(async () => {

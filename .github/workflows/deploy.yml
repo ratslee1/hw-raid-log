@@ -24,12 +24,11 @@ jobs:
       - name: ACR Login
         run: az acr login --name ${{ env.ACR_NAME }}
 
-      - name: Inject secrets into HTML
-        run: sed -i "s|__AZURE_OPENAI_KEY__|${{ secrets.AZURE_OPENAI_KEY }}|g" src/index.html
-
       - name: Build & Push Docker image
         run: |
-          docker build -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          docker build \
+            --build-arg VITE_AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
           docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to App Service
