@@ -473,6 +473,7 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
   ].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 6);
 
   return (
+    <>
     <div className="max-w-[1400px] mx-auto px-6 py-8">
       <div className="mb-8">
         <div className="text-[11px] font-mono uppercase tracking-widest text-stone-500 mb-1">Project RAID overview</div>
@@ -752,6 +753,7 @@ const Dashboard = ({ items, areas, areaMap, onItemClick, onCreateArea, onEditAre
         </div>
       </div>
     )}
+    </>
   );
 };
 
