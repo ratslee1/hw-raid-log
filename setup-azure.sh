@@ -8,18 +8,18 @@ IMAGE_NAME="raid-log"
 APP_PLAN="raid-log-plan"
 APP_NAME="raid-log-app"
 
-az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
-
-az acr build --registry $ACR_NAME --image $IMAGE_NAME:latest .
+# ACR은 이미 생성된 경우 스킵
+az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true 2>/dev/null || echo "ACR already exists, skipping."
 
 az appservice plan create --name $APP_PLAN --resource-group $RESOURCE_GROUP --sku B1 --is-linux
 
 ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query passwords[0].value -o tsv)
+# 초기 이미지는 nginx placeholder — GitHub Actions 첫 실행 시 실제 이미지로 교체됨
 az webapp create \
   --resource-group $RESOURCE_GROUP \
   --plan $APP_PLAN \
   --name $APP_NAME \
-  --deployment-container-image-name $ACR_NAME.azurecr.io/$IMAGE_NAME:latest \
+  --deployment-container-image-name nginx \
   --docker-registry-server-url https://$ACR_NAME.azurecr.io \
   --docker-registry-server-user $ACR_NAME \
   --docker-registry-server-password "$ACR_PASSWORD"
