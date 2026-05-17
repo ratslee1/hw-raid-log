@@ -36,8 +36,8 @@ export const highlightIds = (html) => {
     return `<span style="${s};font-family:monospace;font-size:.73rem;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;line-height:1.5">${id}</span>`;
   };
   return html
-    .replace(/(<[^>]+>)|(\b[RAID]-\d{1,3}\b)/g, (_, tag, id) => tag ?? badge(id))
-    .replace(/<code>(<span [^>]+>[RAID]-\d{1,3}<\/span>)<\/code>/g, '$1');
+    .replace(/(<[^>]+>)|(\b[RAID]-\d{2,}\b)/g, (_, tag, id) => tag ?? badge(id))
+    .replace(/<code>(<span [^>]+>[RAID]-\d{2,}<\/span>)<\/code>/g, '$1');
 };
 
 export const ME = (() => {
