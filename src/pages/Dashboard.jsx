@@ -101,34 +101,33 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
     <>
     <div className="max-w-[1400px] mx-auto px-6 py-8">
       <div className="mb-8">
-        <div className="text-[11px] font-mono uppercase tracking-widest text-zinc-600 mb-1">Project RAID overview</div>
-        <h1 className="text-3xl font-serif font-semibold text-zinc-100">프로젝트 RAID 현황</h1>
-        <p className="text-sm text-zinc-500 mt-1">{areas.length}개 영역 · {items.length}개 항목 추적 중</p>
+        <div className="text-[11px] font-mono uppercase tracking-widest text-stone-500 mb-1">Project RAID overview</div>
+        <h1 className="text-3xl font-serif font-semibold text-stone-900">프로젝트 RAID 현황</h1>
+        <p className="text-sm text-stone-600 mt-1">{areas.length}개 영역 · {items.length}개 항목 추적 중</p>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         {kpis.map(({ type, total, open, critical }) => {
           const meta = TYPE_META[type]; const tone = TYPE_TONE[meta.tone];
           return (
-            <div key={type} className="relative bg-zinc-900 border border-zinc-800 rounded-lg p-4 overflow-hidden hover:border-zinc-700 transition">
+            <div key={type} className="relative bg-white border border-stone-200 rounded-lg p-4 overflow-hidden hover:border-stone-300 transition">
               <div className={cx('absolute top-0 left-0 w-1 h-full', tone.solid)} />
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-zinc-500">{type}</div>
-                  <div className="text-xs text-zinc-300 font-medium">{meta.ko}</div>
-                  <div className="text-[10px] text-zinc-600 leading-tight mt-0.5 max-w-[140px]">{meta.desc}</div>
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-stone-500">{type}</div>
+                  <div className="text-xs text-stone-700 font-medium">{meta.ko}</div>
+                  <div className="text-[10px] text-stone-400 leading-tight mt-0.5 max-w-[140px]">{meta.desc}</div>
                 </div>
                 <div className={cx('w-7 h-7 rounded-md flex items-center justify-center', tone.bg)}>
                   <TypeBadge type={type} size="sm" />
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
-                <div className="text-3xl font-serif font-semibold text-zinc-100">{open}</div>
-                <div className="text-xs text-zinc-500">/ {total} 전체</div>
+                <div className="text-3xl font-serif font-semibold text-stone-900">{open}</div>
+                <div className="text-xs text-stone-500">/ {total} 전체</div>
               </div>
               {critical > 0 && (
-                <div className="mt-2 text-[11px] text-red-400 font-medium flex items-center gap-1">
+                <div className="mt-2 text-[11px] text-red-700 font-medium flex items-center gap-1">
                   <Circle className="w-2 h-2" /> {critical}건 Critical/High
                 </div>
               )}
@@ -138,28 +137,27 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {/* Matrix */}
-        <div className="col-span-2 bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+        <div className="col-span-2 bg-white border border-stone-200 rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif font-semibold text-zinc-100">영역 × Type Matrix</h2>
+            <h2 className="font-serif font-semibold text-stone-900">영역 × Type Matrix</h2>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] text-zinc-500 font-mono">OPEN items only</span>
+              <span className="text-[11px] text-stone-500 font-mono">OPEN items only</span>
               <button onClick={onCreateArea}
-                className="flex items-center gap-1 px-2 py-1 border border-zinc-700 hover:border-zinc-100 hover:bg-zinc-100 hover:text-zinc-950 text-zinc-400 text-[11px] font-medium rounded-md transition">
+                className="flex items-center gap-1 px-2 py-1 border border-stone-200 hover:border-stone-900 hover:bg-stone-900 hover:text-white text-stone-600 text-[11px] font-medium rounded-md transition">
                 <Plus className="w-3 h-3" /> 신규 영역
               </button>
             </div>
           </div>
           <div className="overflow-x-auto max-h-[440px] scroll-hover">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-zinc-900 z-10">
-                <tr className="border-b border-zinc-800">
-                  <th className="text-center text-[11px] font-mono uppercase tracking-wider text-zinc-600 pb-2 w-8">P</th>
-                  <th className="text-left text-[11px] font-mono uppercase tracking-wider text-zinc-500 pb-2 pr-4 w-44">영역</th>
+              <thead className="sticky top-0 bg-white z-10">
+                <tr className="border-b border-stone-200">
+                  <th className="text-center text-[11px] font-mono uppercase tracking-wider text-stone-400 pb-2 w-8">P</th>
+                  <th className="text-left text-[11px] font-mono uppercase tracking-wider text-stone-500 pb-2 pr-4 w-44">영역</th>
                   {Object.keys(TYPE_META).map(t => (
-                    <th key={t} className="text-center text-[11px] font-mono uppercase tracking-wider text-zinc-500 pb-2 w-10">{t.slice(0, 1)}</th>
+                    <th key={t} className="text-center text-[11px] font-mono uppercase tracking-wider text-stone-500 pb-2 w-10">{t.slice(0, 1)}</th>
                   ))}
-                  <th className="text-right text-[11px] font-mono uppercase tracking-wider text-zinc-500 pb-2 pl-2 pr-4 w-12">합계</th>
+                  <th className="text-right text-[11px] font-mono uppercase tracking-wider text-stone-500 pb-2 pl-2 pr-4 w-12">합계</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,18 +170,18 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                       onDragLeave={() => setDragOver(null)}
                       onDrop={(e) => handleDrop(e, idx)}
                       onDragEnd={() => { setDragOver(null); dragIdx.current = null; }}
-                      className={cx('border-b border-zinc-800/50 transition', dragOver === idx ? 'bg-zinc-800' : 'hover:bg-zinc-800/50')}>
+                      className={cx('border-b border-stone-100 transition', dragOver === idx ? 'bg-stone-100' : 'hover:bg-stone-50')}>
                       <td className="py-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <span className="text-[11px] font-mono text-zinc-600 w-4">{idx + 1}</span>
-                          <GripVertical className="w-3 h-3 text-zinc-700 cursor-grab active:cursor-grabbing" />
+                          <span className="text-[11px] font-mono text-stone-400 w-4">{idx + 1}</span>
+                          <GripVertical className="w-3 h-3 text-stone-300 cursor-grab active:cursor-grabbing" />
                         </div>
                       </td>
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-1.5 group/area">
                           <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigate('/log?area=' + encodeURIComponent(area.id))}>
                             <div className="flex items-center flex-wrap gap-1.5">
-                              <span className="font-medium text-zinc-200 text-sm">{area.name}</span>
+                              <span className="font-medium text-stone-900 text-sm">{area.name}</span>
                               {(area.tags || []).map(tag => (
                                 <span key={tag.id} className="group/tag relative inline-flex items-center">
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium text-white cursor-pointer hover:opacity-80 transition"
@@ -192,7 +190,7 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                                     {tag.label}
                                   </span>
                                   <button onClick={(e) => { e.stopPropagation(); onDeleteTag(area.id, tag.id); }}
-                                    className="absolute -top-1.5 -right-1.5 opacity-0 group-hover/tag:opacity-100 transition-opacity w-3.5 h-3.5 bg-zinc-600 rounded-full flex items-center justify-center z-10">
+                                    className="absolute -top-1.5 -right-1.5 opacity-0 group-hover/tag:opacity-100 transition-opacity w-3.5 h-3.5 bg-stone-700 rounded-full flex items-center justify-center z-10">
                                     <X className="w-2 h-2 text-white" />
                                   </button>
                                 </span>
@@ -200,22 +198,22 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                             </div>
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onAddTag(area); }}
-                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700 transition flex-shrink-0" title="태그 추가">
-                            <Tag className="w-3 h-3 text-zinc-500" />
+                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0" title="태그 추가">
+                            <Tag className="w-3 h-3 text-stone-400" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); onEditArea(area); }}
-                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-700 transition flex-shrink-0">
-                            <Edit3 className="w-3 h-3 text-zinc-500" />
+                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0">
+                            <Edit3 className="w-3 h-3 text-stone-400" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); onDeleteArea(area); }}
-                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-950 transition flex-shrink-0">
-                            <Trash2 className="w-3 h-3 text-red-500" />
+                            className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-red-50 transition flex-shrink-0">
+                            <Trash2 className="w-3 h-3 text-red-400" />
                           </button>
                         </div>
                       </td>
                       {Object.keys(TYPE_META).map(t => {
                         const c = counts[t]; const tone = TYPE_TONE[TYPE_META[t].tone];
-                        if (c === 0) return <td key={t} className="text-center py-3 text-zinc-700 w-10">—</td>;
+                        if (c === 0) return <td key={t} className="text-center py-3 text-stone-300 w-10">—</td>;
                         const intensity = c >= 3 ? 'opacity-100' : c === 2 ? 'opacity-75' : 'opacity-55';
                         return (
                           <td key={t} className="text-center py-3 w-10">
@@ -223,60 +221,59 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                           </td>
                         );
                       })}
-                      <td className="text-right pl-2 pr-4 py-3 font-serif font-semibold text-zinc-100 w-12">{total}</td>
+                      <td className="text-right pl-2 pr-4 py-3 font-serif font-semibold text-stone-900 w-12">{total}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          <div className="mt-3 text-[11px] text-zinc-600">행 클릭 시 해당 영역으로 필터링된 RAID Log로 이동합니다.</div>
+          <div className="mt-3 text-[11px] text-stone-500">행 클릭 시 해당 영역으로 필터링된 RAID Log로 이동합니다.</div>
         </div>
 
-        {/* Severity + Health */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-          <h2 className="font-serif font-semibold text-zinc-100 mb-4">Severity 분포</h2>
+        <div className="bg-white border border-stone-200 rounded-lg p-5">
+          <h2 className="font-serif font-semibold text-stone-900 mb-4">Severity 분포</h2>
           <div className="space-y-3">
             {sevDist.map(({ sev, count }) => (
               <div key={sev}>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-baseline justify-between mb-1">
                   <SeverityBadge severity={sev} />
-                  <span className="font-mono text-sm font-semibold text-zinc-200">{count}</span>
+                  <span className="font-mono text-sm text-stone-700">{count}</span>
                 </div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                  <div className={cx('h-full rounded-full', SEVERITY_STYLES[sev].split(' ')[0])} style={{ width: `${(count / maxSev) * 100}%` }} />
+                <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div className={cx('h-full', SEVERITY_STYLES[sev].split(' ')[0])} style={{ width: `${(count / maxSev) * 100}%` }} />
                 </div>
               </div>
             ))}
           </div>
-          <div className="border-t border-zinc-800 mt-5 pt-4">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-zinc-600 mb-2">Overall Health</div>
-            <div className="text-2xl font-serif font-semibold text-zinc-100">
+          <div className="border-t border-stone-100 mt-5 pt-4">
+            <div className="text-[11px] font-mono uppercase tracking-wider text-stone-500 mb-2">Overall Health</div>
+            <div className="text-2xl font-serif font-semibold text-stone-900">
               {items.filter(i => !TERMINAL.includes(i.status)).length}
-              <span className="text-sm font-sans font-normal text-zinc-500 ml-1">open</span>
+              <span className="text-sm font-sans font-normal text-stone-500 ml-1">open</span>
             </div>
             <button onClick={() => setShowClosed(v => !v)}
-              className="text-xs text-zinc-500 mt-1 hover:text-zinc-200 hover:underline transition text-left">
+              className="text-xs text-stone-500 mt-1 hover:text-stone-900 hover:underline transition text-left">
               {closedItems.length}건 종결됨 {showClosed ? '▲' : '▼'}
             </button>
             {showClosed && closedItems.length > 0 && (
               <div className="mt-3 space-y-1.5">
                 {closedItems.map(i => (
                   <button key={i.id} onClick={() => onItemClick(i)}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800/50 hover:bg-zinc-800 rounded-md text-left transition">
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 bg-stone-50 hover:bg-stone-100 rounded-md text-left transition">
                     <TypeBadge type={i.type} size="sm" />
-                    <span className="font-mono text-[10px] text-zinc-500 flex-shrink-0">{i.id}</span>
-                    <span className="text-xs text-zinc-400 truncate">{i.title}</span>
+                    <span className="font-mono text-[10px] text-stone-400 flex-shrink-0">{i.id}</span>
+                    <span className="text-xs text-stone-600 truncate">{i.title}</span>
                     <StatusBadge status={i.status} />
                   </button>
                 ))}
               </div>
             )}
             {showClosed && closedItems.length === 0 && (
-              <div className="mt-2 text-xs text-zinc-600 italic">종결된 항목이 없습니다.</div>
+              <div className="mt-2 text-xs text-stone-400 italic">종결된 항목이 없습니다.</div>
             )}
             <button onClick={openReport}
-              className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-xs font-medium rounded-md transition border border-zinc-700">
+              className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-md transition">
               <Sparkles className="w-3.5 h-3.5" /> AI 요약 보고서
             </button>
           </div>
@@ -284,22 +281,20 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        {/* 주목 항목 */}
-        <div className="col-span-3 bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+        <div className="col-span-3 bg-white border border-stone-200 rounded-lg p-5">
           <div className="flex items-baseline justify-between mb-4">
-            <h2 className="font-serif font-semibold text-zinc-100">주목 필요 항목</h2>
-            <span className="text-[11px] text-zinc-600 font-mono">due + severity 기준 상위 {attention.length}건</span>
+            <h2 className="font-serif font-semibold text-stone-900">주목 필요 항목</h2>
+            <span className="text-[11px] text-stone-500 font-mono">due + severity 기준 상위 {attention.length}건</span>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {attention.map(item => {
               const due = dueChip(item.dueDate);
               return (
-                <div key={item.id} onClick={() => onItemClick(item)}
-                  className="flex items-center gap-3 p-2.5 rounded-md hover:bg-zinc-800/70 transition cursor-pointer">
+                <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-md hover:bg-stone-50 transition">
                   <TypeBadge type={item.type} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-zinc-200 truncate">{item.title}</div>
-                    <div className="text-[11px] text-zinc-500 font-mono truncate">{item.id} · {areaMap[item.area]?.name} · {item.owner}</div>
+                    <div className="text-sm font-medium text-stone-900 truncate">{item.title}</div>
+                    <div className="text-[11px] text-stone-500 font-mono truncate">{item.id} · {areaMap[item.area]?.name} · {item.owner}</div>
                   </div>
                   <SeverityBadge severity={item.severity} />
                   <Chip className={due.cls}>{due.label}</Chip>
@@ -309,22 +304,21 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
           </div>
         </div>
 
-        {/* 최근 활동 */}
-        <div className="col-span-2 bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-          <h2 className="font-serif font-semibold text-zinc-100 mb-4">최근 활동</h2>
+        <div className="col-span-2 bg-white border border-stone-200 rounded-lg p-5">
+          <h2 className="font-serif font-semibold text-stone-900 mb-4">최근 활동</h2>
           <div className="space-y-3">
             {activity.map((a, i) => (
               <div key={i} className="flex gap-3 text-sm">
-                <div className="w-1.5 h-1.5 mt-2 rounded-full bg-zinc-600 flex-shrink-0" />
+                <div className="w-1.5 h-1.5 mt-2 rounded-full bg-stone-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-medium text-zinc-300 text-xs">{a.author}</span>
-                    <span className="text-[10px] text-zinc-600 font-mono">{withDay(a.date)}</span>
+                    <span className="font-medium text-stone-900 text-xs">{a.author}</span>
+                    <span className="text-[10px] text-stone-500 font-mono">{withDay(a.date)}</span>
                   </div>
-                  <div className="text-xs text-zinc-400 truncate">
+                  <div className="text-xs text-stone-700 truncate">
                     {a.type === 'create'
-                      ? <><span className="font-mono text-zinc-500">{a.item.id}</span> 생성</>
-                      : <><span className="font-mono text-zinc-500">{a.item.id}</span> · {a.text}</>}
+                      ? <><span className="font-mono text-stone-500">{a.item.id}</span> 생성</>
+                      : <><span className="font-mono text-stone-500">{a.item.id}</span> · {a.text}</>}
                   </div>
                 </div>
               </div>
@@ -335,37 +329,37 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
     </div>
 
     {reportModal && (
-      <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6"
+      <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6"
         onClick={(e) => { if (e.target === e.currentTarget) setReportModal(false); }}>
-        <div className="bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-zinc-400" />
-              <h2 className="font-serif font-semibold text-zinc-100">AI 요약 보고서</h2>
-              <span className="text-[11px] text-zinc-600 font-mono">{withDay(new Date().toISOString().slice(0, 10))}</span>
+              <Sparkles className="w-4 h-4 text-stone-600" />
+              <h2 className="font-serif font-semibold text-stone-900">AI 요약 보고서</h2>
+              <span className="text-[11px] text-stone-400 font-mono">{withDay(new Date().toISOString().slice(0, 10))}</span>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => { localStorage.removeItem(REPORT_CACHE_KEY); generateReport(); }}
-                title="새로 생성" className="text-zinc-500 hover:text-zinc-200 transition p-1 rounded hover:bg-zinc-800">
+                title="새로 생성" className="text-stone-400 hover:text-stone-700 transition p-1 rounded hover:bg-stone-100">
                 <RefreshCw className="w-4 h-4" />
               </button>
-              <button onClick={() => setReportModal(false)} className="text-zinc-500 hover:text-zinc-200 transition p-1 rounded hover:bg-zinc-800"><X className="w-4 h-4" /></button>
+              <button onClick={() => setReportModal(false)} className="text-stone-400 hover:text-stone-700 transition p-1 rounded hover:bg-stone-100"><X className="w-4 h-4" /></button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-5">
             {reportLoading ? (
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <span className="animate-spin inline-block w-4 h-4 border-2 border-zinc-700 border-t-zinc-300 rounded-full" />
+              <div className="flex items-center gap-2 text-sm text-stone-500">
+                <span className="animate-spin inline-block w-4 h-4 border-2 border-stone-300 border-t-stone-700 rounded-full" />
                 보고서 생성 중...
               </div>
             ) : (
-              <div className="md-report text-sm" dangerouslySetInnerHTML={{ __html: highlightIds(marked.parse(reportText)) }} />
+              <div className="md-report text-sm text-stone-700" dangerouslySetInnerHTML={{ __html: highlightIds(marked.parse(reportText)) }} />
             )}
           </div>
           {!reportLoading && reportText && (
-            <div className="px-5 py-3 border-t border-zinc-800 flex justify-end">
+            <div className="px-5 py-3 border-t border-stone-100 flex justify-end">
               <button onClick={() => navigator.clipboard.writeText(reportText)}
-                className="text-xs text-zinc-500 hover:text-zinc-200 font-medium transition">클립보드 복사</button>
+                className="text-xs text-stone-600 hover:text-stone-900 font-medium transition">클립보드 복사</button>
             </div>
           )}
         </div>

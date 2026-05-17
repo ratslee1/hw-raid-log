@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="min-h-screen bg-stone-50 text-stone-900">
         <Header
           syncState={store.syncState}
           onCreateItem={() => setModalMode('create')}
@@ -39,7 +39,7 @@ export default function App() {
 
         {store.loading ? (
           <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-sm text-zinc-500 font-mono">데이터 불러오는 중…</div>
+            <div className="text-sm text-stone-500 font-mono">데이터 불러오는 중…</div>
           </div>
         ) : (
           <Routes>

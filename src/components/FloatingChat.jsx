@@ -52,24 +52,24 @@ const StepTrace = ({ steps, isLive }) => (
         {s.type === 'think' && (
           <>
             <span className="flex-shrink-0 text-amber-500 mt-px">💭</span>
-            <span className="text-zinc-500 italic">{s.text}</span>
+            <span className="text-stone-400 italic">{s.text}</span>
           </>
         )}
         {s.type === 'tool' && (
           <>
-            <span className="flex-shrink-0 text-zinc-500 mt-px">→</span>
-            <span className="font-mono font-semibold text-zinc-400 flex-shrink-0">
+            <span className="flex-shrink-0 text-stone-400 mt-px">→</span>
+            <span className="font-mono font-semibold text-stone-600 flex-shrink-0">
               {TOOL_LABEL[s.name] || s.name}
             </span>
             {stepArgSummary(s) && (
-              <span className="text-zinc-500 truncate">{stepArgSummary(s)}</span>
+              <span className="text-stone-400 truncate">{stepArgSummary(s)}</span>
             )}
           </>
         )}
         {s.type === 'result' && (
           <>
             <span className="flex-shrink-0 text-emerald-500 mt-px">✓</span>
-            <span className="text-zinc-500">{stepResultSummary(s)}</span>
+            <span className="text-stone-400">{stepResultSummary(s)}</span>
           </>
         )}
       </div>
@@ -77,7 +77,7 @@ const StepTrace = ({ steps, isLive }) => (
     {isLive && (
       <div className="flex items-center gap-0.5 pl-4 pt-0.5">
         {[0, 120, 240].map(d => (
-          <span key={d} className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"
+          <span key={d} className="w-1 h-1 bg-stone-400 rounded-full animate-bounce"
             style={{ animationDelay: `${d}ms` }} />
         ))}
       </div>
@@ -129,23 +129,23 @@ export default function FloatingChat({ storeCtx }) {
   return (
     <>
       {open && (
-        <div className="fixed bottom-20 right-6 w-[420px] h-[580px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
+        <div className="fixed bottom-20 right-6 w-[420px] h-[580px] bg-white border border-stone-200 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-950 flex-shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-stone-900 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-zinc-400" />
-              <span className="text-sm font-medium text-zinc-100">RAID Agent</span>
-              <span className="text-[10px] text-zinc-600 font-mono">ReAct</span>
+              <MessageSquare className="w-4 h-4 text-stone-300" />
+              <span className="text-sm font-medium text-white">RAID Agent</span>
+              <span className="text-[10px] text-stone-500 font-mono">ReAct</span>
             </div>
             <div className="flex items-center gap-1">
               {messages.length > 0 && (
                 <button onClick={clearMessages}
-                  className="text-zinc-500 hover:text-zinc-300 transition p-1 rounded hover:bg-zinc-800" title="대화 초기화">
+                  className="text-stone-400 hover:text-stone-200 transition p-1 rounded hover:bg-stone-800" title="대화 초기화">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               )}
               <button onClick={() => setOpen(false)}
-                className="text-zinc-500 hover:text-zinc-300 transition p-1 rounded hover:bg-zinc-800">
+                className="text-stone-400 hover:text-stone-200 transition p-1 rounded hover:bg-stone-800">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -155,8 +155,8 @@ export default function FloatingChat({ storeCtx }) {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && !loading && (
               <div className="text-center mt-10">
-                <MessageSquare className="w-8 h-8 mx-auto mb-3 text-zinc-600" />
-                <p className="text-xs text-zinc-500 leading-relaxed">
+                <MessageSquare className="w-8 h-8 mx-auto mb-3 text-stone-300" />
+                <p className="text-xs text-stone-400 leading-relaxed">
                   항목 조회, 생성, 상태 변경,<br />AI 보고서 생성을 도와드립니다.
                 </p>
                 <div className="mt-4 space-y-1.5">
@@ -166,7 +166,7 @@ export default function FloatingChat({ storeCtx }) {
                     'AI 보고서 만들어줘',
                   ].map(s => (
                     <button key={s} onClick={() => sendMessage(s)}
-                      className="block w-full text-left text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 px-3 py-2 rounded-lg border border-zinc-700 hover:border-zinc-600 transition">
+                      className="block w-full text-left text-xs text-stone-500 hover:text-stone-900 hover:bg-stone-50 px-3 py-2 rounded-lg border border-stone-100 hover:border-stone-200 transition">
                       {s}
                     </button>
                   ))}
@@ -177,7 +177,7 @@ export default function FloatingChat({ storeCtx }) {
             {messages.map((msg, i) => (
               <div key={i} className={msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 {msg.role === 'user' ? (
-                  <div className="max-w-[80%] bg-zinc-700 text-zinc-100 text-sm px-3 py-2 rounded-2xl rounded-tr-sm">
+                  <div className="max-w-[80%] bg-stone-900 text-white text-sm px-3 py-2 rounded-2xl rounded-tr-sm">
                     <span className="whitespace-pre-wrap">{msg.content}</span>
                   </div>
                 ) : (
@@ -185,18 +185,18 @@ export default function FloatingChat({ storeCtx }) {
                     {/* Step trace toggle */}
                     {toolStepCount(msg.steps) > 0 && (
                       <button onClick={() => toggleSteps(i)}
-                        className="flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-zinc-300 transition ml-1">
+                        className="flex items-center gap-1.5 text-[10px] text-stone-400 hover:text-stone-600 transition ml-1">
                         <span>{expandedSteps[i] ? '▾' : '▸'}</span>
                         <span>{toolStepCount(msg.steps)}단계 실행됨</span>
                       </button>
                     )}
                     {expandedSteps[i] && msg.steps?.length > 0 && (
-                      <div className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2">
+                      <div className="bg-stone-50 border border-stone-100 rounded-xl px-3 py-2">
                         <StepTrace steps={msg.steps} isLive={false} />
                       </div>
                     )}
                     {/* Answer */}
-                    <div className="text-sm px-3 py-2 rounded-2xl rounded-tl-sm bg-zinc-800/50 border border-zinc-700">
+                    <div className="text-sm px-3 py-2 rounded-2xl rounded-tl-sm bg-stone-50 border border-stone-200">
                       <div className="chat-md" dangerouslySetInnerHTML={{ __html: highlightIds(marked.parse(msg.content || '')) }} />
                     </div>
                   </div>
@@ -207,13 +207,13 @@ export default function FloatingChat({ storeCtx }) {
             {/* Live step trace while loading */}
             {loading && (
               <div className="flex justify-start">
-                <div className="max-w-[96%] bg-zinc-800/50 border border-zinc-700 rounded-2xl rounded-tl-sm px-3 py-2.5 min-w-[120px]">
+                <div className="max-w-[96%] bg-stone-50 border border-stone-100 rounded-2xl rounded-tl-sm px-3 py-2.5 min-w-[120px]">
                   {liveSteps.length > 0
                     ? <StepTrace steps={liveSteps} isLive={true} />
                     : (
                       <div className="flex items-center gap-1">
                         {[0, 150, 300].map(d => (
-                          <span key={d} className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce"
+                          <span key={d} className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce"
                             style={{ animationDelay: `${d}ms` }} />
                         ))}
                       </div>
@@ -224,7 +224,7 @@ export default function FloatingChat({ storeCtx }) {
             )}
 
             {error && (
-              <div className="text-xs text-red-400 bg-red-950/60 border border-red-900 px-3 py-2 rounded-lg">
+              <div className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
                 오류: {error}
               </div>
             )}
@@ -232,8 +232,8 @@ export default function FloatingChat({ storeCtx }) {
           </div>
 
           {/* Input */}
-          <div className="px-3 py-3 border-t border-zinc-800 flex-shrink-0">
-            <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 focus-within:border-zinc-500 transition">
+          <div className="px-3 py-3 border-t border-stone-100 flex-shrink-0">
+            <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 focus-within:border-stone-400 transition">
               <input
                 ref={inputRef}
                 value={input}
@@ -243,10 +243,10 @@ export default function FloatingChat({ storeCtx }) {
                 onCompositionEnd={() => { isComposing.current = false; }}
                 placeholder="메시지를 입력하세요..."
                 disabled={loading}
-                className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
+                className="flex-1 bg-transparent text-sm text-stone-900 placeholder:text-stone-400 outline-none"
               />
               <button onClick={handleSend} disabled={!input.trim() || loading}
-                className="text-zinc-500 hover:text-zinc-100 disabled:opacity-30 transition flex-shrink-0">
+                className="text-stone-400 hover:text-stone-900 disabled:opacity-30 transition flex-shrink-0">
                 <SendIcon />
               </button>
             </div>
@@ -255,7 +255,7 @@ export default function FloatingChat({ storeCtx }) {
       )}
 
       <button onClick={() => setOpen(v => !v)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-zinc-100 hover:bg-white text-zinc-950 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all z-50">
+        className="fixed bottom-6 right-6 w-14 h-14 bg-stone-900 hover:bg-stone-800 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all z-50">
         {open ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
       </button>
     </>
