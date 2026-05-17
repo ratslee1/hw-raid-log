@@ -1,4 +1,4 @@
-import { cx } from '../utils';
+import { cx } from '../lib/utils';
 import { ChevronDown } from './icons';
 
 export default function Select({ value, onChange, options, label }) {

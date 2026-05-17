@@ -27,6 +27,7 @@ jobs:
       - name: Build & Push Docker image
         run: |
           docker build \
+            -f docker/Dockerfile \
             --build-arg VITE_AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} \
             -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
           docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}

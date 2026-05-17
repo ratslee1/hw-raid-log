@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { AZURE_ENDPOINT, AZURE_DEPLOYMENT, AZURE_API_VERSION, AZURE_KEY } from '../constants';
+import { AZURE_ENDPOINT, AZURE_DEPLOYMENT, AZURE_API_VERSION, AZURE_KEY } from '../config/constants';
 import { TOOL_SCHEMAS, executeTool } from '../agent/tools';
 
 const SYSTEM_PROMPT = `당신은 프로젝트 RAID 관리 에이전트입니다. 사용자의 요청에 따라 RAID 항목(Risk/Assumption/Issue/Dependency)을 조회, 생성, 상태 업데이트하고 AI 보고서를 생성합니다.

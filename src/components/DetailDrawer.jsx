@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { cx, dueChip } from '../utils';
-import { TRANSITIONS } from '../constants';
+import { cx, dueChip } from '../lib/utils';
+import { TRANSITIONS } from '../config/constants';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from './badges';
 import { X, Trash2, Edit3, ArrowRight } from './icons';
 

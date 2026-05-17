@@ -1,4 +1,4 @@
-import { AZURE_ENDPOINT, AZURE_DEPLOYMENT, AZURE_API_VERSION, AZURE_KEY, TERMINAL } from '../constants';
+import { AZURE_ENDPOINT, AZURE_DEPLOYMENT, AZURE_API_VERSION, AZURE_KEY, TERMINAL } from '../config/constants';
 
 export const getReportCacheKey = () => `raid_report_${new Date().toISOString().slice(0, 10)}`;
 

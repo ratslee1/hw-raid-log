@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { cx, dueChip } from '../utils';
-import { TYPE_META, TYPE_TONE, TRANSITIONS, STATUS_STYLES, SEVERITIES, TYPE_ORDER } from '../constants';
+import { cx, dueChip } from '../lib/utils';
+import { TYPE_META, TYPE_TONE, TRANSITIONS, STATUS_STYLES, SEVERITIES, TYPE_ORDER } from '../config/constants';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from '../components/badges';
 import Select from '../components/Select';
 import { Search, X, MoreHorizontal, ArrowRight, Edit3, Trash2, MessageSquare } from '../components/icons';

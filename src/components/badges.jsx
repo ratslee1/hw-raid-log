@@ -1,5 +1,5 @@
-import { cx } from '../utils';
-import { TYPE_META, TYPE_TONE, STATUS_STYLES, SEVERITY_STYLES } from '../constants';
+import { cx } from '../lib/utils';
+import { TYPE_META, TYPE_TONE, STATUS_STYLES, SEVERITY_STYLES } from '../config/constants';
 import { AlertTriangle, HelpCircle, Zap, Link2 } from './icons';
 
 const ICONS = { Risk: AlertTriangle, Assumption: HelpCircle, Issue: Zap, Dependency: Link2 };

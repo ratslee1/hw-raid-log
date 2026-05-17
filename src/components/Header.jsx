@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { TODAY } from '../utils';
+import { TODAY } from '../lib/utils';
 import { Plus, LayoutDashboard, List } from './icons';
 
 export default function Header({ onCreateItem, onCreateArea, syncState }) {

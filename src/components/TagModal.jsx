@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TAG_PALETTE } from '../constants';
+import { TAG_PALETTE } from '../config/constants';
 import { X, Check } from './icons';
 
 export default function TagModal({ onClose, onSubmit, initialLabel = '', initialColor = '#3b82f6', existingTags = [] }) {

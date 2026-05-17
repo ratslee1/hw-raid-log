@@ -1,5 +1,5 @@
 import { generateReportText, getReportCacheKey } from './reportGen';
-import { TYPE_META, TERMINAL } from '../constants';
+import { TYPE_META, TERMINAL } from '../config/constants';
 
 export const TOOL_SCHEMAS = [
   {

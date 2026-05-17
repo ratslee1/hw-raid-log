@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { cx, dayStr } from '../utils';
-import { TYPE_META, TYPE_TONE, SEVERITIES } from '../constants';
+import { cx, dayStr } from '../lib/utils';
+import { TYPE_META, TYPE_TONE, SEVERITIES } from '../config/constants';
 import { TypeBadge } from './badges';
 import { X, Check } from './icons';
 
