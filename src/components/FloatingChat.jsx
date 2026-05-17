@@ -3,6 +3,19 @@ import { marked } from 'marked';
 import useAgent from '../hooks/useAgent';
 import { MessageSquare, X, Trash2 } from './icons';
 
+const ID_BADGE = {
+  R: 'background:#fff0f0;color:#9f1239',
+  A: 'background:#fffbeb;color:#92400e',
+  I: 'background:#f5f3ff;color:#5b21b6',
+  D: 'background:#ecfdf5;color:#065f46',
+};
+
+const highlightIds = (html) =>
+  html.replace(/<code>([RAID]-\d{1,3})<\/code>/g, (_, id) => {
+    const style = ID_BADGE[id[0]] || 'background:#f5f5f4;color:#292524';
+    return `<span style="${style};font-family:monospace;font-size:.71rem;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;line-height:1.5">${id}</span>`;
+  });
+
 const SendIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -90,7 +103,7 @@ export default function FloatingChat({ storeCtx }) {
                 }>
                   {msg.role === 'user'
                     ? <span className="whitespace-pre-wrap">{msg.content}</span>
-                    : <div className="md-report text-sm" dangerouslySetInnerHTML={{ __html: marked.parse(msg.content || '') }} />
+                    : <div className="chat-md" dangerouslySetInnerHTML={{ __html: highlightIds(marked.parse(msg.content || '')) }} />
                   }
                 </div>
               </div>
