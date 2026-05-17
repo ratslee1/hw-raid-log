@@ -30,11 +30,15 @@ const ID_BADGE = {
   D: 'background:#ecfdf5;color:#065f46',
 };
 
-export const highlightIds = (html) =>
-  html.replace(/<code>([RAID]-\d{1,3})<\/code>/g, (_, id) => {
-    const style = ID_BADGE[id[0]] || 'background:#f5f5f4;color:#292524';
-    return `<span style="${style};font-family:monospace;font-size:.73rem;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;line-height:1.5">${id}</span>`;
-  });
+export const highlightIds = (html) => {
+  const badge = (id) => {
+    const s = ID_BADGE[id[0]] || 'background:#f5f5f4;color:#292524';
+    return `<span style="${s};font-family:monospace;font-size:.73rem;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;line-height:1.5">${id}</span>`;
+  };
+  return html
+    .replace(/(<[^>]+>)|(\b[RAID]-\d{1,3}\b)/g, (_, tag, id) => tag ?? badge(id))
+    .replace(/<code>(<span [^>]+>[RAID]-\d{1,3}<\/span>)<\/code>/g, '$1');
+};
 
 export const ME = (() => {
   try { return JSON.parse(localStorage.getItem('raid_auth'))?.email?.[0]?.toUpperCase() || '나'; }

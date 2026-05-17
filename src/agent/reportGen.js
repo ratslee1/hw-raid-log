@@ -14,69 +14,83 @@ export async function generateReportText(items, areaMap) {
     return da - db;
   });
 
+  const urgent = sorted.filter(i => { const d = daysLeft(i.dueDate); return d !== null && d <= 7; });
+  const soon   = sorted.filter(i => { const d = daysLeft(i.dueDate); return d !== null && d > 7 && d <= 28; });
+
   const buildCtx = (i) => {
     const d = daysLeft(i.dueDate);
-    const dueLabel = d !== null ? `기한: ${i.dueDate} (D${d >= 0 ? '-' : '+'}${Math.abs(d)})` : '기한 미정';
-    const comments = (i.comments || []).slice(-3).map(c => `    💬 [${c.date}] ${c.text}`).join('\n');
+    const dueLabel = d !== null ? `${i.dueDate} (D${d >= 0 ? '-' : '+'}${Math.abs(d)})` : '기한 미정';
+    const lastComment = (i.comments || []).slice(-1)[0];
     return [
-      `▸ [${i.type}] ${i.id} — ${i.title}`,
-      `  상태: ${i.status} | 심각도: ${i.severity || '-'} | 영역: ${areaMap[i.area]?.name || '-'} | 담당: ${i.owner || '-'} | ${dueLabel}`,
-      i.description ? `  내용: ${i.description}` : '',
-      i.mitigation ? `  대응: ${i.mitigation}` : '',
-      comments,
+      `  항목: [${i.type}] ${i.id} — ${i.title}`,
+      `    상태: ${i.status} | 심각도: ${i.severity || '-'} | 담당: ${i.owner || '-'} | 기한: ${dueLabel}`,
+      i.description ? `    내용: ${i.description}` : '',
+      i.mitigation ? `    대응: ${i.mitigation}` : '',
+      lastComment ? `    최신코멘트: [${lastComment.date}] ${lastComment.text}` : '',
     ].filter(Boolean).join('\n');
   };
 
-  const urgent = sorted.filter(i => { const d = daysLeft(i.dueDate); return d !== null && d <= 14; });
-  const soon   = sorted.filter(i => { const d = daysLeft(i.dueDate); return d !== null && d > 14 && d <= 30; });
-  const later  = sorted.filter(i => { const d = daysLeft(i.dueDate); return d !== null && d > 30; }).slice(0, 5);
-  const noDue  = sorted.filter(i => !i.dueDate).slice(0, 5);
+  const groupByArea = (list) => {
+    const map = {};
+    list.forEach(i => {
+      const areaName = areaMap[i.area]?.name || '영역 미지정';
+      if (!map[areaName]) map[areaName] = [];
+      map[areaName].push(i);
+    });
+    return map;
+  };
 
-  const sections = [];
-  if (urgent.length) sections.push(`### 긴급 — 2주 이내 (${urgent.length}건)\n${urgent.map(buildCtx).join('\n\n')}`);
-  if (soon.length)   sections.push(`### 단기 — 2~4주 (${soon.length}건)\n${soon.map(buildCtx).join('\n\n')}`);
-  if (later.length)  sections.push(`### 중기 — 4주 이후 (상위 ${later.length}건)\n${later.map(buildCtx).join('\n\n')}`);
-  if (noDue.length)  sections.push(`### 기한 미정 (${noDue.length}건)\n${noDue.map(buildCtx).join('\n\n')}`);
+  const renderGroup = (map) =>
+    Object.entries(map).map(([area, list]) =>
+      `[영역: ${area}]\n${list.map(buildCtx).join('\n\n')}`
+    ).join('\n\n');
 
-  const prompt = `오늘은 ${todayStr}입니다. 아래는 프로젝트 RAID 현황 데이터입니다.
+  const urgentBlock = urgent.length ? renderGroup(groupByArea(urgent)) : '(해당 없음)';
+  const soonBlock   = soon.length   ? renderGroup(groupByArea(soon))   : '(해당 없음)';
 
-고객사 임원 앞에서 대면 보고하는 상황이라고 가정하고, 아래 구조와 형식 규칙을 **엄격히** 따라 한국어로 보고서를 작성해 주세요.
+  const prompt = `오늘은 ${todayStr}입니다. 전체 진행 중 항목 수: ${openItems.length}건
 
-**형식 규칙 (반드시 준수)**
-- 각 항목은 반드시 ### 소제목으로 시작: ### [타입] ID — 제목 형식
-- 소제목 아래 세부내용은 반드시 불릿(-)으로 작성, 줄글 금지
-- 불릿 항목: 현황, 최신 진행상황, 리스크/영향, 권고 조치 순서로
-- 총평과 종합 권고사항만 문장으로 작성 가능
+아래 데이터를 바탕으로 고객사 임원 보고용 RAID 요약 보고서를 작성하세요.
+형식 규칙을 **엄격히** 준수하세요.
+
+**형식 규칙**
+- 총평은 정확히 3문장으로 작성
+- 항목별 소제목: #### [타입] ID — 제목 (반드시 #### 4개 샵 사용)
+- 영역 소제목: ### 영역명 (반드시 ### 3개 샵 사용)
+- 세부 내용은 반드시 -(하이픈) 불릿으로 작성, 불릿 항목명은 **볼드**
+- ID는 반드시 원본 그대로 표기 (예: R-01, A-03)
 
 ---
+
 ## 1. 총평
-(3~4문장. 전체 건강 상태, 주요 우려사항, 긍정적 진척 포함)
 
-## 2. 즉시 조치 필요 (2주 이내)
+(3문장으로 작성: 전체 현황, 주요 우려사항, 긴급 대응 필요성)
 
-### [타입] ID — 제목
-- **현황**: ...
-- **최신 진행상황**: (코멘트 반영)
+## 2. 즉시 조치 필요 (1주 이내, ${urgent.length}건)
+
+[영역별로 ### 소제목 → 항목별로 #### 소제목]
+각 항목:
+- **기한 및 현황**: ...
+- **최신 진행상황**: (코멘트 반영, 없으면 "업데이트 없음")
 - **리스크/영향**: ...
-- **권고 조치**: ...
+- **권고사항**: ...
 
-(위 형식으로 각 항목 반복)
+## 3. 단기 주의 항목 (2~4주, ${soon.length}건)
 
-## 3. 단기 주의 항목 (2~4주)
+[영역별로 ### 소제목 → 항목별로 #### 소제목]
+각 항목:
+- **기한 및 현황**: ...
+- **권고사항**: ...
 
-### [타입] ID — 제목
-- **현황**: ...
-- **권고 조치**: ...
-
-(위 형식으로 각 항목 반복)
-
-## 4. 종합 권고사항
-- (액션 아이템 1)
-- (액션 아이템 2)
-- (액션 아이템 3)
 ---
 
-${sections.join('\n\n')}`;
+### 데이터
+
+**즉시 조치 필요 (1주 이내)**
+${urgentBlock}
+
+**단기 주의 항목 (2~4주)**
+${soonBlock}`;
 
   const url = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT}/chat/completions?api-version=${AZURE_API_VERSION}`;
   const res = await fetch(url, {
@@ -84,7 +98,7 @@ ${sections.join('\n\n')}`;
     headers: { 'Content-Type': 'application/json', 'api-key': AZURE_KEY },
     body: JSON.stringify({
       messages: [
-        { role: 'system', content: '당신은 프로젝트 관리 전문가입니다. 고객사 임원 보고에 적합한 명확하고 전문적인 한국어 보고서를 작성합니다.' },
+        { role: 'system', content: '당신은 프로젝트 관리 전문가입니다. 주어진 형식 규칙을 정확히 따라 한국어 보고서를 작성합니다.' },
         { role: 'user', content: prompt },
       ],
       max_completion_tokens: 3000,
