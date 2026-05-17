@@ -5,6 +5,23 @@ export const TOOL_SCHEMAS = [
   {
     type: 'function',
     function: {
+      name: 'think',
+      description: '행동 전 상황을 분석하고 다음 단계를 계획합니다. 매 질의의 첫 번째 호출로 반드시 사용하세요.',
+      parameters: {
+        type: 'object',
+        properties: {
+          reasoning: {
+            type: 'string',
+            description: '사용자 의도 파악, 필요한 툴·파라미터·검색 키워드를 2~3문장으로 분석 (한국어)',
+          },
+        },
+        required: ['reasoning'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'query_items',
       description: 'RAID 항목을 조회합니다. 키워드 검색(제목·설명·대응방안·코멘트), 기간, 타입, 영역으로 필터링 가능합니다.',
       parameters: {

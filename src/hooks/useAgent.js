@@ -1,81 +1,109 @@
 import { useState, useRef } from 'react';
-import { AZURE_ENDPOINT, AZURE_DEPLOYMENT, AZURE_API_VERSION, AZURE_KEY } from '../config/constants';
-import { TOOL_SCHEMAS, executeTool } from '../agent/tools';
+import { plannerNode, executorNode } from '../agent/nodes';
 
-const SYSTEM_PROMPT = `당신은 프로젝트 RAID 관리 에이전트입니다. 사용자의 요청에 따라 RAID 항목(Risk/Assumption/Issue/Dependency)을 조회, 생성, 상태 업데이트하고 AI 보고서를 생성합니다.
+const MAX_ITERATIONS = 12;
 
-**절대 규칙 — 반드시 준수**
-- 항목 정보는 반드시 툴 호출 결과에서만 가져오세요. 툴이 반환하지 않은 항목 ID, 제목, 상태는 절대 언급하지 마세요.
-- 존재하지 않는 항목을 추측하거나 만들어내지 마세요.
-- 특정 항목을 조회·수정하기 전에 항상 먼저 \`query_items\` 툴로 실제 존재 여부를 확인하세요.
-- 툴 결과가 비어 있으면 "해당 항목이 없습니다"라고 명확히 답하세요.
+const SYSTEM_PROMPT = `당신은 ReAct(Reasoning + Acting) 패턴으로 동작하는 RAID 관리 에이전트입니다.
 
-**자연어 질문 처리 전략**
-- 사용자는 정확한 제목 대신 애매한 표현으로 질문합니다. 질문에서 핵심 명사·동사를 키워드로 추출해 \`query_items\`의 \`keyword\` 파라미터로 전달하세요.
-  - 예: "예상답변 언제까지 받기로 했지?" → keyword: "예상답변"
-  - 예: "인증 연동 관련 이슈 있어?" → keyword: "인증 연동", item_type: "Issue"
-  - 예: "API 쪽에 막힌 거 있어?" → keyword: "API", item_type: "Dependency"
-- 키워드 검색 결과가 0건이면, 키워드를 줄이거나 바꿔서 한 번 더 시도하세요.
-- 두 번 시도해도 없으면 전체 조회(keyword 없이) 후 의미적으로 가장 관련 있는 항목을 골라 답하세요.
+## 처리 절차
 
-**형식 규칙**
-- 한국어로 간결하게 응답하세요.
-- 항목 ID는 반드시 backtick으로 표기하세요: \`R-01\`
-- 조회 결과는 글머리(-)로 나열하고, 그룹/소제목은 ### 형식을 사용하세요.
-- 항목 생성·수정·코멘트 추가 후에는 결과를 짧게 확인해주세요.
-- 오늘 날짜: ${new Date().toISOString().slice(0, 10)}`;
+매 사용자 질의마다 아래 사이클을 정확히 따르세요:
 
-const callOpenAI = async (messages) => {
-  const url = `${AZURE_ENDPOINT}/openai/deployments/${AZURE_DEPLOYMENT}/chat/completions?api-version=${AZURE_API_VERSION}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': AZURE_KEY },
-    body: JSON.stringify({ messages, tools: TOOL_SCHEMAS, max_completion_tokens: 1200 }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.choices[0];
-};
+**① Thought** — think 툴 (첫 번째 호출, 필수)
+  - 사용자 의도 파악, 필요한 툴과 파라미터 결정, 검색 키워드 추출
+  - 예: "예산 리스크 있어?" → reasoning: "keyword='예산', item_type='Risk'로 query_items 호출 예정"
+  - 예: "R-03 기한 다음 달 말로 바꿔줘" → reasoning: "update_item(R-03, due_date='...')로 수정 예정. 먼저 존재 확인 필요"
+
+**② Action** — 계획한 툴 호출
+
+**③ Observation** — 툴 결과 분석
+  - 충분한 정보 → Answer 생성
+  - 조회 0건 → think 재호출 후 키워드 변경 또는 전체 조회로 재시도
+  - 추가 작업 필요 → think 재호출 후 다음 Action
+
+**④ Answer** — 최종 한국어 답변
+
+## 절대 규칙
+- 툴 결과에 없는 항목 ID·제목·상태는 언급 금지
+- 수정·삭제 전 반드시 query_items로 존재 확인
+- 조회 결과 0건이면 "해당 항목을 찾을 수 없습니다" 명시
+
+## 출력 형식
+- 한국어, 간결하게
+- ID 표기: 백틱 \`R-01\`
+- 목록: -, 소제목: ###
+
+오늘: ${new Date().toISOString().slice(0, 10)}`;
 
 export default function useAgent(storeCtx) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [liveSteps, setLiveSteps] = useState([]);
   const [error, setError] = useState(null);
   const storeRef = useRef(storeCtx);
   storeRef.current = storeCtx;
 
   const sendMessage = async (text) => {
     setError(null);
+    setLiveSteps([]);
+
     const userMsg = { role: 'user', content: text };
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     setLoading(true);
 
-    const apiMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...updatedMessages];
+    const steps = [];
+    const onStep = (step) => {
+      steps.push(step);
+      setLiveSteps([...steps]);
+    };
+
+    // Build API messages from conversation history (strip UI-only fields like steps)
+    const apiMessages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...nextMessages.map(({ role, content }) => ({ role, content })),
+    ];
+
+    let iterations = 0;
     try {
-      while (true) {
-        const choice = await callOpenAI(apiMessages);
+      while (iterations < MAX_ITERATIONS) {
+        iterations++;
+
+        // Planner node: force think on the first call of each user query
+        const choice = await plannerNode(apiMessages, { forceThink: iterations === 1 });
         apiMessages.push(choice.message);
 
         if (choice.finish_reason === 'tool_calls') {
-          for (const tc of choice.message.tool_calls) {
-            const args = JSON.parse(tc.function.arguments);
-            const result = await executeTool(tc.function.name, args, storeRef.current);
-            apiMessages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
-          }
+          // Executor node: run tools, emit steps
+          const toolMessages = await executorNode(
+            choice.message.tool_calls,
+            storeRef.current,
+            onStep,
+          );
+          toolMessages.forEach(tm => apiMessages.push(tm));
         } else {
-          setMessages([...updatedMessages, { role: 'assistant', content: choice.message.content }]);
+          // Answer node: package final response with trace
+          setMessages([...nextMessages, {
+            role: 'assistant',
+            content: choice.message.content,
+            steps: [...steps],
+          }]);
           break;
         }
+      }
+
+      if (iterations >= MAX_ITERATIONS) {
+        setError('최대 처리 단계에 도달했습니다. 질문을 더 구체적으로 입력해주세요.');
       }
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
+      setLiveSteps([]);
     }
   };
 
-  const clearMessages = () => { setMessages([]); setError(null); };
+  const clearMessages = () => { setMessages([]); setError(null); setLiveSteps([]); };
 
-  return { messages, loading, error, sendMessage, clearMessages };
+  return { messages, loading, error, liveSteps, sendMessage, clearMessages };
 }
