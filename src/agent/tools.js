@@ -90,6 +90,27 @@ export const TOOL_SCHEMAS = [
   {
     type: 'function',
     function: {
+      name: 'update_item',
+      description: '항목의 필드(제목, 설명, 심각도, 담당자, 기한, 대응방안, 영역 등)를 수정합니다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          item_id: { type: 'string', description: '수정할 항목 ID (예: R-01)' },
+          title: { type: 'string' },
+          description: { type: 'string' },
+          mitigation: { type: 'string' },
+          severity: { type: 'string', enum: ['Critical', 'High', 'Medium', 'Low', 'None'] },
+          owner: { type: 'string' },
+          due_date: { type: 'string', description: 'YYYY-MM-DD 또는 빈 문자열로 기한 제거' },
+          area_name: { type: 'string', description: '영역 이름 (부분 일치)' },
+        },
+        required: ['item_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'add_comment',
       description: '특정 RAID 항목에 코멘트를 추가합니다.',
       parameters: {
@@ -122,7 +143,7 @@ const dayDiff = (dueDate) => {
 };
 
 export async function executeTool(name, args, storeCtx) {
-  const { items = [], areas = [], areaMap = {}, createItem, createArea, transitionStatus, addComment } = storeCtx;
+  const { items = [], areas = [], areaMap = {}, createItem, updateItem, createArea, transitionStatus, addComment } = storeCtx;
 
   if (name === 'query_items') {
     let result = args.include_closed ? [...items] : items.filter(i => !TERMINAL.includes(i.status));
@@ -192,6 +213,24 @@ export async function executeTool(name, args, storeCtx) {
       results.push({ id, title: item.title, success: true });
     }
     return { updated: results.filter(r => r.success).length, total: args.item_ids.length, results };
+  }
+
+  if (name === 'update_item') {
+    const item = items.find(i => i.id === args.item_id);
+    if (!item) return { success: false, error: `항목 ${args.item_id}을 찾을 수 없습니다` };
+    const upd = {};
+    if (args.title !== undefined) upd.title = args.title;
+    if (args.description !== undefined) upd.description = args.description;
+    if (args.mitigation !== undefined) upd.mitigation = args.mitigation;
+    if (args.severity !== undefined) upd.severity = args.severity;
+    if (args.owner !== undefined) upd.owner = args.owner;
+    if (args.due_date !== undefined) upd.dueDate = args.due_date;
+    if (args.area_name !== undefined) {
+      const found = areas.find(a => a.name.toLowerCase().includes(args.area_name.toLowerCase()));
+      upd.area = found?.id ?? null;
+    }
+    updateItem(args.item_id, upd);
+    return { success: true, updated: Object.keys(upd), message: `\`${args.item_id}\` 수정 완료` };
   }
 
   if (name === 'add_comment') {
