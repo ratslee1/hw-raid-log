@@ -5,7 +5,7 @@ import { cx, TODAY, dueChip, dayDiff, highlightIds, withDay } from '../lib/utils
 import { TYPE_META, TYPE_TONE, SEVERITY_STYLES, SEVERITY_WEIGHT, SEVERITIES, TERMINAL } from '../config/constants';
 import { generateReportText, getReportCacheKey } from '../agent/reportGen';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from '../components/badges';
-import { Plus, Edit3, Trash2, X, GripVertical, Sparkles, Circle, RefreshCw } from '../components/icons';
+import { Plus, Tag, Edit3, Trash2, X, GripVertical, Sparkles, Circle, RefreshCw } from '../components/icons';
 
 export default function Dashboard({ items, areas, areaMap, onItemClick, onCreateArea, onEditArea, onDeleteArea, onAddTag, onEditTag, onDeleteTag }) {
   const navigate = useNavigate();
@@ -199,7 +199,7 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); onAddTag(area); }}
                             className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0" title="태그 추가">
-                            <Plus className="w-3 h-3 text-stone-400" />
+                            <Tag className="w-3 h-3 text-stone-400" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); onEditArea(area); }}
                             className="opacity-0 group-hover/area:opacity-100 w-5 h-5 flex items-center justify-center rounded hover:bg-stone-100 transition flex-shrink-0">
