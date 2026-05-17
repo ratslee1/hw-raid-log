@@ -45,3 +45,4 @@ select { background-image: none; }
 .md-report em { color:#57534e; font-style:italic; }
 .md-report hr { border:none; border-top:1px solid #e7e5e4; margin:1.2em 0; }
 .md-report blockquote { border-left:3px solid #d6d3d1; padding:.3em .8em; margin:.5em 0; color:#57534e; background:#fafaf9; border-radius:0 4px 4px 0; }
+.md-report code { background:#e7e5e4; color:#292524; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:.78rem; font-weight:600; padding:.1em .4em; border-radius:4px; }
