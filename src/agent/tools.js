@@ -90,6 +90,21 @@ export const TOOL_SCHEMAS = [
   {
     type: 'function',
     function: {
+      name: 'add_comment',
+      description: '특정 RAID 항목에 코멘트를 추가합니다.',
+      parameters: {
+        type: 'object',
+        properties: {
+          item_id: { type: 'string', description: '코멘트를 추가할 항목 ID (예: R-01)' },
+          text: { type: 'string', description: '코멘트 내용' },
+        },
+        required: ['item_id', 'text'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'generate_report',
       description: 'AI 요약 보고서를 생성합니다. 생성된 보고서는 당일 캐시됩니다.',
       parameters: {
@@ -107,7 +122,7 @@ const dayDiff = (dueDate) => {
 };
 
 export async function executeTool(name, args, storeCtx) {
-  const { items = [], areas = [], areaMap = {}, createItem, createArea, transitionStatus } = storeCtx;
+  const { items = [], areas = [], areaMap = {}, createItem, createArea, transitionStatus, addComment } = storeCtx;
 
   if (name === 'query_items') {
     let result = args.include_closed ? [...items] : items.filter(i => !TERMINAL.includes(i.status));
@@ -177,6 +192,13 @@ export async function executeTool(name, args, storeCtx) {
       results.push({ id, title: item.title, success: true });
     }
     return { updated: results.filter(r => r.success).length, total: args.item_ids.length, results };
+  }
+
+  if (name === 'add_comment') {
+    const item = items.find(i => i.id === args.item_id);
+    if (!item) return { success: false, error: `항목 ${args.item_id}을 찾을 수 없습니다` };
+    addComment(args.item_id, args.text);
+    return { success: true, message: `\`${args.item_id}\`에 코멘트가 추가되었습니다.` };
   }
 
   if (name === 'generate_report') {
