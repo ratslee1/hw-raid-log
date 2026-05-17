@@ -2,6 +2,11 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { BIN_URL, API_KEY, CACHE_KEY, DEFAULT_AREAS, INITIAL_ITEMS } from '../config/constants';
 import { dayStr, ME } from '../lib/utils';
 
+const repairAreas = (items, areas) => {
+  const valid = new Set(areas.map(a => a.id));
+  return items.map(i => valid.has(i.area) ? i : { ...i, area: null });
+};
+
 export default function useRAIDStore() {
   const [items, setItems] = useState(null);
   const [areas, setAreas] = useState(null);
@@ -15,14 +20,14 @@ export default function useRAIDStore() {
     if (cached) {
       try {
         const { items: ci, areas: ca } = JSON.parse(cached);
-        setItems(ci); setAreas(ca); setLoading(false);
+        setItems(repairAreas(ci, ca)); setAreas(ca); setLoading(false);
       } catch (e) {}
     }
     fetch(`${BIN_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } })
       .then(r => r.json())
       .then(data => {
-        const fi = data.record?.items?.length ? data.record.items : INITIAL_ITEMS;
         const fa = data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS;
+        const fi = repairAreas(data.record?.items?.length ? data.record.items : INITIAL_ITEMS, fa);
         localStorage.setItem(CACHE_KEY, JSON.stringify({ items: fi, areas: fa }));
         setItems(fi); setAreas(fa);
       })
