@@ -9,9 +9,12 @@ const Label = ({ children }) => <div className="text-[11px] font-mono uppercase 
 const Field = ({ label, children }) => <div><Label>{label}</Label>{children}</div>;
 
 export default function FormModal({ mode, initial, areas, allItems, currentId, onClose, onSubmit }) {
-  const [form, setForm] = useState(initial || {
-    type: 'Risk', title: '', area: areas[0]?.id || '', status: 'Identified',
-    severity: 'Medium', owner: '', dueDate: dayStr(14), description: '', mitigation: '', relatedIds: [],
+  const [form, setForm] = useState(() => {
+    const base = initial || {
+      type: 'Risk', title: '', area: areas[0]?.id || '', status: 'Identified',
+      severity: 'Medium', owner: '', dueDate: dayStr(14), description: '', mitigation: '', relatedIds: [],
+    };
+    return { ...base, area: areas.some(a => a.id === base.area) ? base.area : '' };
   });
 
   const updateForm = (k, v) => {
@@ -51,7 +54,7 @@ export default function FormModal({ mode, initial, areas, allItems, currentId, o
             <input type="text" value={form.title} onChange={(e) => updateForm('title', e.target.value)} placeholder="예: Azure OpenAI 쿼터 부족 가능성" className={inputCls} />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="영역"><select value={form.area} onChange={(e) => updateForm('area', e.target.value)} className={inputCls}>{areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
+            <Field label="영역"><select value={form.area} onChange={(e) => updateForm('area', e.target.value)} className={inputCls}><option value="">-- 선택 --</option>{areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></Field>
             <Field label="Owner"><input type="text" value={form.owner} onChange={(e) => updateForm('owner', e.target.value)} placeholder="담당자명" className={inputCls} /></Field>
             <Field label="Status"><select value={form.status} onChange={(e) => updateForm('status', e.target.value)} className={inputCls}>{TYPE_META[form.type].statuses.map(s => <option key={s}>{s}</option>)}</select></Field>
             <Field label="Severity"><select value={form.severity} onChange={(e) => updateForm('severity', e.target.value)} className={inputCls}>{SEVERITIES.map(s => <option key={s}>{s}</option>)}</select></Field>
