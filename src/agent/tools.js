@@ -23,13 +23,18 @@ export const TOOL_SCHEMAS = [
     type: 'function',
     function: {
       name: 'query_items',
-      description: 'RAID 항목을 조회합니다. 키워드 검색(제목·설명·대응방안·코멘트), 기간, 타입, 영역으로 필터링 가능합니다.',
+      description: 'RAID 항목을 조회합니다. 목록 조회(기본)와 상세 조회(detail:true)를 지원합니다. 특정 항목의 설명·대응방안·코멘트·연관항목이 필요하면 detail:true를 사용하세요.',
       parameters: {
         type: 'object',
         properties: {
+          item_ids: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '특정 항목 ID 목록으로 조회 (예: ["D-07", "R-01"]). 지정하면 다른 필터는 무시됩니다.',
+          },
           keyword: {
             type: 'string',
-            description: '제목·설명·대응방안·코멘트 전체에서 키워드 검색 (공백 구분 시 OR 조건). 자연어 질문에서 핵심어를 추출해 사용하세요.',
+            description: '제목·설명·대응방안·코멘트 전체에서 키워드 검색 (공백 구분 시 OR 조건).',
           },
           timeframe: {
             type: 'string',
@@ -48,6 +53,10 @@ export const TOOL_SCHEMAS = [
           area_name: {
             type: 'string',
             description: '영역 이름 필터 (부분 일치)',
+          },
+          detail: {
+            type: 'boolean',
+            description: '상세 조회 여부. true이면 설명(description), 대응방안(mitigation), 코멘트 전체, 연관항목 ID, 생성일을 포함합니다. 특정 항목의 진행상황·내용 파악 시 사용하세요.',
           },
         },
         required: [],
@@ -167,42 +176,60 @@ export async function executeTool(name, args, storeCtx) {
   const { items = [], areas = [], areaMap = {}, createItem, updateItem, createArea, transitionStatus, addComment } = storeCtx;
 
   if (name === 'query_items') {
-    let result = args.include_closed ? [...items] : items.filter(i => !TERMINAL.includes(i.status));
-    if (args.item_type) result = result.filter(i => i.type === args.item_type);
-    if (args.area_name) {
-      const q = args.area_name.toLowerCase();
-      result = result.filter(i => areaMap[i.area]?.name?.toLowerCase().includes(q));
+    let result;
+
+    // ID 지정 조회 — 다른 필터 무시
+    if (args.item_ids?.length) {
+      const idSet = new Set(args.item_ids);
+      result = items.filter(i => idSet.has(i.id));
+    } else {
+      result = args.include_closed ? [...items] : items.filter(i => !TERMINAL.includes(i.status));
+      if (args.item_type) result = result.filter(i => i.type === args.item_type);
+      if (args.area_name) {
+        const q = args.area_name.toLowerCase();
+        result = result.filter(i => areaMap[i.area]?.name?.toLowerCase().includes(q));
+      }
+      if (args.keyword) {
+        const keywords = args.keyword.toLowerCase().split(/\s+/).filter(Boolean);
+        result = result.filter(i => {
+          const corpus = [
+            i.title, i.description, i.mitigation,
+            ...(i.comments || []).map(c => c.text),
+          ].join(' ').toLowerCase();
+          return keywords.some(k => corpus.includes(k));
+        });
+      }
+      if (args.timeframe && args.timeframe !== 'all') {
+        result = result.filter(i => {
+          const d = dayDiff(i.dueDate);
+          if (args.timeframe === 'no_due') return d === null;
+          if (d === null) return false;
+          if (args.timeframe === 'short') return d <= 7;
+          if (args.timeframe === 'medium') return d > 7 && d <= 21;
+          if (args.timeframe === 'long') return d > 21;
+          return true;
+        });
+      }
     }
-    if (args.keyword) {
-      const keywords = args.keyword.toLowerCase().split(/\s+/).filter(Boolean);
-      result = result.filter(i => {
-        const corpus = [
-          i.title, i.description, i.mitigation,
-          ...(i.comments || []).map(c => c.text),
-        ].join(' ').toLowerCase();
-        return keywords.some(k => corpus.includes(k));
-      });
-    }
-    if (args.timeframe && args.timeframe !== 'all') {
-      result = result.filter(i => {
-        const d = dayDiff(i.dueDate);
-        if (args.timeframe === 'no_due') return d === null;
-        if (d === null) return false;
-        if (args.timeframe === 'short') return d <= 7;
-        if (args.timeframe === 'medium') return d > 7 && d <= 21;
-        if (args.timeframe === 'long') return d > 21;
-        return true;
-      });
-    }
+
     return {
       count: result.length,
       items: result.slice(0, 20).map(i => {
         const d = dayDiff(i.dueDate);
-        return {
+        const base = {
           id: i.id, type: i.type, title: i.title, status: i.status,
           severity: i.severity || '-', area: areaMap[i.area]?.name || '-',
           owner: i.owner || '-',
           due: i.dueDate ? `${i.dueDate} (D${d >= 0 ? '-' : '+'}${Math.abs(d)})` : '기한없음',
+        };
+        if (!args.detail) return base;
+        return {
+          ...base,
+          createdAt: i.createdAt || '',
+          description: i.description || '',
+          mitigation: i.mitigation || '',
+          relatedIds: i.relatedIds || [],
+          comments: (i.comments || []).map(c => `[${c.date}] ${c.author}: ${c.text}`),
         };
       }),
     };
