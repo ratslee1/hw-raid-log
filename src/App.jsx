@@ -8,6 +8,7 @@ import TagModal from './components/TagModal';
 import Dashboard from './pages/Dashboard';
 import Log from './pages/Log';
 import useRAIDStore from './hooks/useRAIDStore';
+import FloatingChat from './components/FloatingChat';
 
 export default function App() {
   const store = useRAIDStore();
@@ -111,6 +112,8 @@ export default function App() {
             onClose={() => { setModalMode(null); setSelectedArea(null); setSelectedTag(null); }}
             onSubmit={(label, color) => { store.updateAreaTag(selectedArea.id, selectedTag.id, label, color); setModalMode(null); setSelectedArea(null); setSelectedTag(null); }} />
         )}
+
+        <FloatingChat storeCtx={store} />
       </div>
     </BrowserRouter>
   );
