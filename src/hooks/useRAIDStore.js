@@ -7,6 +7,25 @@ const repairAreas = (items, areas) => {
   return items.map(i => valid.has(i.area) ? i : { ...i, area: null });
 };
 
+const repairIds = (items) => {
+  const maxN = {};
+  items.forEach(i => {
+    const m = i.id?.match(/^([RAID])-(\d+)$/);
+    if (m && m[1] === i.type[0]) maxN[m[1]] = Math.max(maxN[m[1]] || 0, parseInt(m[2]));
+  });
+  const idMap = {};
+  const fixed = items.map(i => {
+    if (!i.id || i.id[0] === i.type[0]) return i;
+    const p = i.type[0];
+    maxN[p] = (maxN[p] || 0) + 1;
+    const newId = `${p}-${String(maxN[p]).padStart(2, '0')}`;
+    idMap[i.id] = newId;
+    return { ...i, id: newId };
+  });
+  if (!Object.keys(idMap).length) return items;
+  return fixed.map(i => ({ ...i, relatedIds: (i.relatedIds || []).map(r => idMap[r] || r) }));
+};
+
 export default function useRAIDStore() {
   const [items, setItems] = useState(null);
   const [areas, setAreas] = useState(null);
@@ -20,14 +39,14 @@ export default function useRAIDStore() {
     if (cached) {
       try {
         const { items: ci, areas: ca } = JSON.parse(cached);
-        setItems(repairAreas(ci, ca)); setAreas(ca); setLoading(false);
+        setItems(repairIds(repairAreas(ci, ca))); setAreas(ca); setLoading(false);
       } catch (e) {}
     }
     fetch(`${BIN_URL}/latest`, { headers: { 'X-Master-Key': API_KEY } })
       .then(r => r.json())
       .then(data => {
         const fa = data.record?.areas?.length ? data.record.areas : DEFAULT_AREAS;
-        const fi = repairAreas(data.record?.items?.length ? data.record.items : INITIAL_ITEMS, fa);
+        const fi = repairIds(repairAreas(data.record?.items?.length ? data.record.items : INITIAL_ITEMS, fa));
         localStorage.setItem(CACHE_KEY, JSON.stringify({ items: fi, areas: fa }));
         setItems(fi); setAreas(fa);
       })

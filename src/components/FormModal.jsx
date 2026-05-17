@@ -34,14 +34,21 @@ export default function FormModal({ mode, initial, areas, allItems, currentId, o
         </div>
         <div className="p-6 space-y-4">
           <div>
-            <Label>Type</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label>Type</Label>
+              {mode === 'edit' && <span className="text-[10px] text-stone-400">생성 후 변경 불가 (ID와 연동)</span>}
+            </div>
             <div className="grid grid-cols-4 gap-2">
               {Object.keys(TYPE_META).map(t => {
                 const meta = TYPE_META[t]; const tone = TYPE_TONE[meta.tone]; const active = form.type === t;
+                const locked = mode === 'edit' && !active;
                 return (
-                  <button key={t} type="button" onClick={() => updateForm('type', t)}
+                  <button key={t} type="button"
+                    onClick={() => mode === 'create' && updateForm('type', t)}
+                    disabled={mode === 'edit'}
                     className={cx('flex flex-col items-center gap-1 py-2.5 rounded-md border text-xs transition',
-                      active ? cx(tone.bg, tone.text, 'border-transparent ring-2', tone.ring) : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300')}>
+                      active ? cx(tone.bg, tone.text, 'border-transparent ring-2', tone.ring) : 'bg-white border-stone-200 text-stone-600',
+                      locked ? 'opacity-30 cursor-not-allowed' : 'hover:border-stone-300')}>
                     <TypeBadge type={t} size="sm" />
                     <span className="font-medium">{t}</span>
                     <span className="text-[10px] opacity-70">{meta.ko}</span>
