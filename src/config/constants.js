@@ -16,10 +16,10 @@ export const TYPE_META = {
 };
 
 export const TYPE_TONE = {
-  rose:    { bg: 'bg-rose-50',    text: 'text-rose-700',    ring: 'ring-rose-200',    dot: 'bg-rose-500',    solid: 'bg-rose-600' },
-  amber:   { bg: 'bg-amber-50',   text: 'text-amber-800',   ring: 'ring-amber-200',   dot: 'bg-amber-500',   solid: 'bg-amber-600' },
-  violet:  { bg: 'bg-violet-50',  text: 'text-violet-700',  ring: 'ring-violet-200',  dot: 'bg-violet-500',  solid: 'bg-violet-600' },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200', dot: 'bg-emerald-500', solid: 'bg-emerald-600' },
+  rose:    { bg: 'bg-rose-950',    text: 'text-rose-300',    ring: 'ring-rose-800',    dot: 'bg-rose-400',    solid: 'bg-rose-600' },
+  amber:   { bg: 'bg-amber-950',   text: 'text-amber-300',   ring: 'ring-amber-800',   dot: 'bg-amber-400',   solid: 'bg-amber-500' },
+  violet:  { bg: 'bg-violet-950',  text: 'text-violet-300',  ring: 'ring-violet-800',  dot: 'bg-violet-400',  solid: 'bg-violet-600' },
+  emerald: { bg: 'bg-emerald-950', text: 'text-emerald-300', ring: 'ring-emerald-800', dot: 'bg-emerald-400', solid: 'bg-emerald-600' },
 };
 
 export const TRANSITIONS = {
@@ -30,25 +30,25 @@ export const TRANSITIONS = {
 };
 
 export const STATUS_STYLES = {
-  Identified:    'bg-stone-100 text-stone-700 ring-stone-200',
-  Pending:       'bg-stone-100 text-stone-700 ring-stone-200',
-  Open:          'bg-stone-100 text-stone-700 ring-stone-200',
-  Assessed:      'bg-sky-50 text-sky-700 ring-sky-200',
-  'In Progress': 'bg-sky-50 text-sky-700 ring-sky-200',
-  Active:        'bg-sky-50 text-sky-700 ring-sky-200',
-  Mitigating:    'bg-amber-50 text-amber-800 ring-amber-200',
-  Blocked:       'bg-rose-50 text-rose-700 ring-rose-200',
-  Invalidated:   'bg-rose-50 text-rose-700 ring-rose-200',
-  Validated:     'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  Resolved:      'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  Closed:        'bg-stone-200/70 text-stone-500 ring-stone-300',
+  Identified:    'bg-zinc-800 text-zinc-300 ring-zinc-700',
+  Pending:       'bg-zinc-800 text-zinc-300 ring-zinc-700',
+  Open:          'bg-zinc-800 text-zinc-300 ring-zinc-700',
+  Assessed:      'bg-sky-950 text-sky-300 ring-sky-900',
+  'In Progress': 'bg-sky-950 text-sky-300 ring-sky-900',
+  Active:        'bg-sky-950 text-sky-300 ring-sky-900',
+  Mitigating:    'bg-amber-950 text-amber-300 ring-amber-900',
+  Blocked:       'bg-rose-950 text-rose-300 ring-rose-900',
+  Invalidated:   'bg-rose-950 text-rose-300 ring-rose-900',
+  Validated:     'bg-emerald-950 text-emerald-300 ring-emerald-900',
+  Resolved:      'bg-emerald-950 text-emerald-300 ring-emerald-900',
+  Closed:        'bg-zinc-900 text-zinc-600 ring-zinc-800',
 };
 
 export const SEVERITY_STYLES = {
   Critical: 'bg-red-600 text-white',
   High:     'bg-orange-500 text-white',
-  Medium:   'bg-amber-300 text-amber-950',
-  Low:      'bg-sky-100 text-sky-700 ring-1 ring-sky-200',
+  Medium:   'bg-amber-400 text-amber-950',
+  Low:      'bg-sky-800 text-sky-200',
 };
 
 export const SEVERITY_WEIGHT = { Critical: 4, High: 3, Medium: 2, Low: 1 };
