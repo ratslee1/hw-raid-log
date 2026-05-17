@@ -18,6 +18,19 @@ export const dueChip = (due) => {
   return { cls: 'text-stone-600 bg-stone-50 ring-stone-200', label: `D-${diff}` };
 };
 
+const ID_BADGE = {
+  R: 'background:#fff0f0;color:#9f1239',
+  A: 'background:#fffbeb;color:#92400e',
+  I: 'background:#f5f3ff;color:#5b21b6',
+  D: 'background:#ecfdf5;color:#065f46',
+};
+
+export const highlightIds = (html) =>
+  html.replace(/<code>([RAID]-\d{1,3})<\/code>/g, (_, id) => {
+    const style = ID_BADGE[id[0]] || 'background:#f5f5f4;color:#292524';
+    return `<span style="${style};font-family:monospace;font-size:.73rem;font-weight:700;padding:1px 6px;border-radius:4px;display:inline-block;line-height:1.5">${id}</span>`;
+  });
+
 export const ME = (() => {
   try { return JSON.parse(localStorage.getItem('raid_auth'))?.email?.[0]?.toUpperCase() || '나'; }
   catch { return '나'; }

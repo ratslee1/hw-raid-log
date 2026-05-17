@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { marked } from 'marked';
-import { cx, TODAY, dueChip, dayDiff } from '../lib/utils';
+import { cx, TODAY, dueChip, dayDiff, highlightIds } from '../lib/utils';
 import { TYPE_META, TYPE_TONE, SEVERITY_STYLES, SEVERITY_WEIGHT, SEVERITIES, TERMINAL } from '../config/constants';
 import { generateReportText, getReportCacheKey } from '../agent/reportGen';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from '../components/badges';
@@ -353,7 +353,7 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                 보고서 생성 중...
               </div>
             ) : (
-              <div className="md-report text-sm text-stone-700" dangerouslySetInnerHTML={{ __html: marked.parse(reportText) }} />
+              <div className="md-report text-sm text-stone-700" dangerouslySetInnerHTML={{ __html: highlightIds(marked.parse(reportText)) }} />
             )}
           </div>
           {!reportLoading && reportText && (
