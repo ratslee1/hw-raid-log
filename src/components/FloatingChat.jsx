@@ -36,7 +36,10 @@ export default function FloatingChat({ storeCtx }) {
   }, [messages, loading]);
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+    if (open) setTimeout(() => {
+      inputRef.current?.focus();
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+    }, 50);
   }, [open]);
 
   const handleSend = () => {
