@@ -6,10 +6,14 @@ export const TOOL_SCHEMAS = [
     type: 'function',
     function: {
       name: 'query_items',
-      description: 'RAID 항목을 조회합니다. 기간별(단기/중기/장기), 타입, 영역으로 필터링 가능합니다.',
+      description: 'RAID 항목을 조회합니다. 키워드 검색(제목·설명·대응방안·코멘트), 기간, 타입, 영역으로 필터링 가능합니다.',
       parameters: {
         type: 'object',
         properties: {
+          keyword: {
+            type: 'string',
+            description: '제목·설명·대응방안·코멘트 전체에서 키워드 검색 (공백 구분 시 OR 조건). 자연어 질문에서 핵심어를 추출해 사용하세요.',
+          },
           timeframe: {
             type: 'string',
             enum: ['short', 'medium', 'long', 'no_due', 'all'],
@@ -151,6 +155,16 @@ export async function executeTool(name, args, storeCtx) {
     if (args.area_name) {
       const q = args.area_name.toLowerCase();
       result = result.filter(i => areaMap[i.area]?.name?.toLowerCase().includes(q));
+    }
+    if (args.keyword) {
+      const keywords = args.keyword.toLowerCase().split(/\s+/).filter(Boolean);
+      result = result.filter(i => {
+        const corpus = [
+          i.title, i.description, i.mitigation,
+          ...(i.comments || []).map(c => c.text),
+        ].join(' ').toLowerCase();
+        return keywords.some(k => corpus.includes(k));
+      });
     }
     if (args.timeframe && args.timeframe !== 'all') {
       result = result.filter(i => {
