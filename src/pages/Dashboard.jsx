@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { marked } from 'marked';
-import { cx, TODAY, dueChip, dayDiff, highlightIds } from '../lib/utils';
+import { cx, TODAY, dueChip, dayDiff, highlightIds, withDay } from '../lib/utils';
 import { TYPE_META, TYPE_TONE, SEVERITY_STYLES, SEVERITY_WEIGHT, SEVERITIES, TERMINAL } from '../config/constants';
 import { generateReportText, getReportCacheKey } from '../agent/reportGen';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from '../components/badges';
@@ -313,7 +313,7 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
                     <span className="font-medium text-stone-900 text-xs">{a.author}</span>
-                    <span className="text-[10px] text-stone-500 font-mono">{a.date}</span>
+                    <span className="text-[10px] text-stone-500 font-mono">{withDay(a.date)}</span>
                   </div>
                   <div className="text-xs text-stone-700 truncate">
                     {a.type === 'create'
@@ -336,7 +336,7 @@ export default function Dashboard({ items, areas, areaMap, onItemClick, onCreate
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-stone-600" />
               <h2 className="font-serif font-semibold text-stone-900">AI 요약 보고서</h2>
-              <span className="text-[11px] text-stone-400 font-mono">{new Date().toISOString().slice(0, 10)}</span>
+              <span className="text-[11px] text-stone-400 font-mono">{withDay(new Date().toISOString().slice(0, 10))}</span>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => { localStorage.removeItem(REPORT_CACHE_KEY); generateReport(); }}

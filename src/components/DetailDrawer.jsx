@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cx, dueChip } from '../lib/utils';
+import { cx, dueChip, withDay } from '../lib/utils';
 import { TRANSITIONS } from '../config/constants';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from './badges';
 import { X, Trash2, Edit3, ArrowRight } from './icons';
@@ -79,8 +79,8 @@ export default function DetailDrawer({ item, allItems, areaMap, onSelectItem, on
               <div className="text-[11px] text-stone-500 font-mono">{area?.id}</div>
             </Meta>
             <Meta label="Owner"><div className="text-sm text-stone-900">{item.owner || '—'}</div></Meta>
-            <Meta label="Due Date"><div className="text-sm text-stone-900 font-mono">{item.dueDate}</div></Meta>
-            <Meta label="Created"><div className="text-sm text-stone-900 font-mono">{item.createdAt}</div></Meta>
+            <Meta label="Due Date"><div className="text-sm text-stone-900 font-mono">{withDay(item.dueDate)}</div></Meta>
+            <Meta label="Created"><div className="text-sm text-stone-900 font-mono">{withDay(item.createdAt)}</div></Meta>
           </div>
 
           {(item.relatedIds || []).length > 0 && (
@@ -123,7 +123,7 @@ export default function DetailDrawer({ item, allItems, areaMap, onSelectItem, on
                   <div className="flex-1 bg-stone-50 rounded-lg px-3 py-2 min-w-0">
                     <div className="flex items-baseline gap-2 mb-0.5">
                       <span className="text-xs font-semibold text-stone-900">{c.author}</span>
-                      <span className="text-[10px] text-stone-500 font-mono">{c.date}</span>
+                      <span className="text-[10px] text-stone-500 font-mono">{withDay(c.date)}</span>
                       <div className="ml-auto flex gap-2 opacity-0 group-hover/comment:opacity-100 transition-opacity flex-shrink-0">
                         <button onClick={() => { setEditingIdx(idx); setEditText(c.text); }}
                           className="text-[10px] text-stone-400 hover:text-stone-700">수정</button>

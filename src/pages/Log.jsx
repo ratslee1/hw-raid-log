@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { cx, dueChip } from '../lib/utils';
+import { cx, dueChip, withDay } from '../lib/utils';
 import { TYPE_META, TYPE_TONE, TRANSITIONS, STATUS_STYLES, SEVERITIES, TYPE_ORDER } from '../config/constants';
 import { TypeBadge, StatusBadge, SeverityBadge, Chip } from '../components/badges';
 import Select from '../components/Select';
@@ -121,7 +121,7 @@ export default function Log({ items, areas, areaMap, onRowClick, onTransition, o
                   <td className="px-4 py-3">
                     <div className="space-y-0.5">
                       <Chip className={due.cls}>{due.label}</Chip>
-                      <div className="text-[10px] text-stone-400 font-mono">{item.dueDate}</div>
+                      <div className="text-[10px] text-stone-400 font-mono">{withDay(item.dueDate)}</div>
                     </div>
                   </td>
                   <td className="px-2 py-3 relative">
